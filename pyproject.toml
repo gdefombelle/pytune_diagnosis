@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "pytune-diagnosis"
+version = "0.0.1"
+description = "pytune diagnosis rt and batch"
+authors = ["Gabriel de Fombelle <gabriel.de.fombelle@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "app" }]   # code dans services/pytune_ai_router/app
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+
+# API stack
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.34.0" }
+pydantic = "^2.8.0"
+
+# Networking / IO
+httpx = "^0.27.2"
+pyyaml = "^6.0.2"
+aiofiles = "^24.1.0"
+python-multipart = "^0.0.12"
+
+
+
+# Infra (si utilisés dans ce service)
+redis = "^5.0.7"
+asyncpg = "^0.30.0"
+tortoise-orm = "^0.20.0"
+python-dotenv = "^1.0.1"
+sse-starlette = "^2.0.0"
+
+# PDF util
+fpdf = "^1.7.2"
+
+# ---- DEV (monorepo, editable) ----
+simple-logger = { path = "../../packages/simple_logger", develop = true }
+pytune-helpers = { path = "../../packages/pytune_helpers", develop = true }
+pytune-configuration = { path = "../../packages/pytune_configuration", develop = true }
+pytune-data = { path = "../../packages/pytune_data", develop = true }
+pytune-auth-common = { path = "../../packages/pytune_auth_common", develop = true }
+
+
+# ---- PROD (quand tu publieras) ----
+# simple-logger = "^2.0.1"
+# pytune-helpers = "^1.2.0"
+# pytune-configuration = "^2.0.3"
+# pytune-data = "^x.y.z"
+# pytune-auth-common = "^x.y.z"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+pytest-asyncio = "^0.23.8"
+ruff = "^0.6.8"
+mypy = "^1.11.1"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

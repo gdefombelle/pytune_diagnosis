@@ -1,0 +1,38 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# === Env / Venv ===
+.env
+.env.*
+venv/
+.venv/
+poetry.lock
+
+# === Pytest ===
+.cache/
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# === Logs ===
+*.log
+logs/
+*.sqlite3
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === VSCode / IDEs ===
+.vscode/
+.idea/
+*.swp
+
+# === Migrations ou fichiers Tortoise (si tu génères un jour des fichiers .models) ===
+app/__init__.py
+
