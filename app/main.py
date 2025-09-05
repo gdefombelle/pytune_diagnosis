@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -13,9 +13,6 @@ from .routers.rt_diagnosis import router as rt_diagnosis_router
 
 from simple_logger.logger import get_logger, SimpleLogger
 from pytune_configuration.sync_config_singleton import config, SimpleConfig
-
-# 🚀 Importer les routers
-from .routers import chat_router
 
 # 📜 Initialisation
 if config is None:
