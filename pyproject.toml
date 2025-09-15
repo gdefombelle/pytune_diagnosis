@@ -35,7 +35,6 @@ fpdf = "^1.7.2"
 
 # ---- DEV (monorepo, editable) ----
 simple-logger = { path = "../../packages/simple_logger", develop = true }
-pytune-helpers = { path = "../../packages/pytune_helpers", develop = true }
 pytune-configuration = { path = "../../packages/pytune_configuration", develop = true }
 pytune-data = { path = "../../packages/pytune_data", develop = true }
 pytune-auth-common = { path = "../../packages/pytune_auth_common", develop = true }
