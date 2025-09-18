@@ -1,62 +1,60 @@
 import json
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from sse_starlette.sse import EventSourceResponse
-import asyncio
-from fastapi import APIRouter, WebSocket
+import struct
 import time
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from app.core.note_analyzer import analyze_expected_note
+from app.models.schemas import NoteCaptureMeta
 
 router = APIRouter(prefix="/diag")
 
-@router.websocket("/ws/diagnosis")
-async def diagnosis_ws(ws: WebSocket):
+@router.websocket("/ws")
+async def ws_diagnosis(ws: WebSocket):
     await ws.accept()
-    while True:
-        try:
+    print("✅ Client connected to /diag/ws")
+
+    try:
+        while True:
             msg = await ws.receive()
-            print("📩 Message brut reçu:", msg)
 
-            if msg["type"] == "websocket.receive":
-                data = msg.get("text") or msg.get("bytes")
-                print("➡️ Data:", data)
-
-                if data == "ping":
+            # ────────────── PING / PONG ──────────────
+            if msg["type"] == "websocket.receive" and "text" in msg:
+                text = msg["text"]
+                if text == "ping":
                     start = time.time()
                     await ws.send_text("pong")
                     latency = (time.time() - start) * 1000
                     await ws.send_text(f"latency:{latency:.2f}ms")
+                    continue
 
-            elif msg["type"] == "websocket.disconnect":
-                print("❌ Client déconnecté")
+            # ────────────── ANALYSE AUDIO ──────────────
+            if msg["type"] == "websocket.receive" and "bytes" in msg:
+                data = msg["bytes"]
+
+                # 1) Lire header JSON
+                meta_len = struct.unpack("I", data[:4])[0]
+                meta_bytes = data[4:4+meta_len]
+                audio_bytes = data[4+meta_len:]
+
+                meta_dict = json.loads(meta_bytes.decode("utf-8"))
+                meta = NoteCaptureMeta(**meta_dict)
+
+                print(f"🎹 Received note {meta.note_expected}, {len(audio_bytes)} bytes")
+
+                # 2) Analyse
+                result = analyze_expected_note(meta, audio_bytes)
+
+                # 3) Réponse enrichie
+                payload = {
+                    "type": "analysis",
+                    "note": meta.note_expected,
+                    **json.loads(result.json())
+                }
+                await ws.send_text(json.dumps(payload))
+                continue
+
+            if msg["type"] == "websocket.disconnect":
+                print("❌ Client disconnected from /diag/ws")
                 break
 
-        except Exception as e:
-            import traceback
-            print("❌ Exception WebSocket:", e)
-            traceback.print_exc()
-            break
-
-
-
-@router.websocket("/ws")
-async def ws_diagnosis(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            # 🔹 recevoir un buffer audio (ArrayBuffer côté frontend)
-            data = await websocket.receive_bytes()
-
-            # pour l’instant on ne fait que confirmer réception
-            print(f"📦 Audio chunk reçu: {len(data)} bytes")
-
-            # plus tard : appel de ta fonction d’analyse (yin/fft, etc.)
-            result = {
-                "note_detected": None,
-                "frequency_hz": None,
-                "confidence": None,
-                "received_bytes": len(data)
-            }
-
-            await websocket.send_text(json.dumps(result))
-
     except WebSocketDisconnect:
-        print("❌ Client déconnecté du diagnostic")
+        print("❌ Client disconnected from /diag/ws")

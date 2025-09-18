@@ -22,7 +22,6 @@ aiofiles = "^24.1.0"
 python-multipart = "^0.0.12"
 
 
-
 # Infra (si utilisés dans ce service)
 redis = "^5.0.7"
 asyncpg = "^0.30.0"
@@ -38,6 +37,7 @@ simple-logger = { path = "../../packages/simple_logger", develop = true }
 pytune-configuration = { path = "../../packages/pytune_configuration", develop = true }
 pytune-data = { path = "../../packages/pytune_data", develop = true }
 pytune-auth-common = { path = "../../packages/pytune_auth_common", develop = true }
+pytune-dsp = { path = "../../packages/pytune_dsp", develop = true }
 
 
 # ---- PROD (quand tu publieras) ----
