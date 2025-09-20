@@ -78,10 +78,15 @@ def analyze_note(
     spectrum_norm = spectrum / np.max(spectrum) if np.max(spectrum) > 0 else spectrum
     fingerprint = spectrum_norm[:512]
 
-    harmonic_fp = harmonic_spectrum_fft(signal, sr, stable_f0, nb_harmonics=8)
-    print("🎹 Harmonic fingerprint")
-    for k, (f, amp) in enumerate(harmonic_fp, start=1):
-        print(f"  H{k}: target={f:.2f} Hz, amplitude={amp:.3f}")
+    raw_fp, norm_fp = harmonic_spectrum_fft(signal, sr, stable_f0, nb_harmonics=8)
+
+    print("🎹 Harmonic fingerprint (raw)")
+    for k, (f, amp) in enumerate(raw_fp, start=1):
+        print(f"  H{k}: {f:.2f} Hz, amp={amp:.2f}")
+
+    print("🎹 Harmonic fingerprint (normalized)")
+    for k, (f, amp) in enumerate(norm_fp, start=1):
+        print(f"  H{k}: {f:.2f} Hz, amp_norm={amp:.3f}")
 
     return NoteAnalysisResult(
         note_name=note_name,
@@ -94,5 +99,6 @@ def analyze_note(
         partials=partials_hz,
         inharmonicity=inharmonicity,
         spectral_fingerprint=fingerprint,
-        harmonic_spectrum=harmonic_fp,  # 👈 ajout ici
+        harmonic_spectrum_raw=raw_fp,     # amplitudes brutes
+        harmonic_spectrum_norm=norm_fp,   # amplitudes normalisées (0–1)
     )

@@ -12,7 +12,6 @@ from pytune_dsp.utils.note_utils import midi_to_freq
 
 router = APIRouter(prefix="/diag")
 
-
 @router.websocket("/ws")
 async def ws_diagnosis(ws: WebSocket):
     await ws.accept()
@@ -46,7 +45,7 @@ async def ws_diagnosis(ws: WebSocket):
 
                 print(f"🎹 Received note {meta.note_expected}, {len(audio_bytes)} bytes")
 
-                # 2) Essayer décodage direct PCM (rapide)
+                # 2) Essayer décodage direct PCM
                 signal = None
                 sr = meta.sample_rate
                 try:
@@ -77,12 +76,15 @@ async def ws_diagnosis(ws: WebSocket):
                 expected_freq = midi_to_freq(meta.note_expected)
                 result = analyze_note(str(meta.note_expected), expected_freq, signal, sr)
 
-                # 4) Réponse enrichie
+                # 4) Réponse enrichie → alignée au frontend
+                result_dict = result.model_dump()
                 payload = {
                     "type": "analysis",
-                    "note": meta.note_expected,
-                    **json.loads(result.model_dump_json())
+                    "midi": meta.note_expected,           # 👈 au lieu de "note"
+                    "noteName": result_dict.pop("note_name", None),  # 👈 rename
+                    **result_dict,
                 }
+
                 await ws.send_text(json.dumps(payload))
                 continue
 

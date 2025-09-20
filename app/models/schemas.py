@@ -1,6 +1,6 @@
 # src/models/schemas.py
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 
 class NoteCaptureMeta(BaseModel):
@@ -22,12 +22,15 @@ class NoteAnalysisResult(BaseModel):
     valid: bool
     f0: Optional[float] = None
     confidence: Optional[float] = None
-    deviation_cents: Optional[float] = None   # 👈 écart vs expected
-    expected_freq: Optional[float] = None     # 👈 traçabilité
+    deviation_cents: Optional[float] = None   # écart vs expected
+    expected_freq: Optional[float] = None     # traçabilité
 
     harmonics: List[float] = []               # fréquences théoriques k*f0
     partials: List[float] = []                # fréquences mesurées (Hz)
     inharmonicity: List[float] = []           # déviation (cents)
 
     spectral_fingerprint: List[float] = []    # compact, normalisé (hash-like)
-    harmonic_spectrum: List[tuple[float, float]] = []  # (freq, amplitude)
+
+    # Ajouts
+    harmonic_spectrum_raw: List[Tuple[float, float]] = []   # (freq, amplitude brute)
+    harmonic_spectrum_norm: List[Tuple[float, float]] = []  # (freq, amplitude normalisée 0–1)
