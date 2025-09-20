@@ -18,10 +18,16 @@ class NoteCaptureMeta(BaseModel):
 
 
 class NoteAnalysisResult(BaseModel):
-    midi: int
-    noteName: str
+    note_name: str
+    valid: bool
     f0: Optional[float] = None
-    harmonics: Optional[List[float]] = None
-    inharmonicity: Optional[float] = None
-    detuned_cents: Optional[float] = None
-    error: Optional[str] = None
+    confidence: Optional[float] = None
+    deviation_cents: Optional[float] = None   # 👈 écart vs expected
+    expected_freq: Optional[float] = None     # 👈 traçabilité
+
+    harmonics: List[float] = []               # fréquences théoriques k*f0
+    partials: List[float] = []                # fréquences mesurées (Hz)
+    inharmonicity: List[float] = []           # déviation (cents)
+
+    spectral_fingerprint: List[float] = []    # compact, normalisé (hash-like)
+    harmonic_spectrum: List[tuple[float, float]] = []  # (freq, amplitude)
