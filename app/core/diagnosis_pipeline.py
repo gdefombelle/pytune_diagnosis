@@ -1,104 +1,133 @@
-"""
-diagnosis_pipeline.py
-=====================
-Pipeline principal pour l’analyse d’une note isolée (diagnostic PyTune).
-"""
-
+# pytune_dsp/analysis/analyze.py
+from app.models.schemas import NoteAnalysisResult
 import numpy as np
 
 from pytune_dsp.utils.yin import yin_track
 from pytune_dsp.analysis.f0_analysis import stable_f0_detection
-from pytune_dsp.analysis.partials import (
-    compute_partials_fft_peaks,
+from pytune_dsp.analysis.partials import compute_partials_fft_peaks
+from pytune_dsp.analysis.inharmonicity import (
+    compute_inharmonicity_avg,
     estimate_B,
 )
 from pytune_dsp.analysis.spectrum import harmonic_spectrum_fft
-from app.models.schemas import NoteAnalysisResult
+from pytune_dsp.preprocessing.trim import trim_signal
+from pytune_dsp.analysis.guess_note import guess_f0_fft, guess_f0_pattern, guess_f0_fusion
 
-
-# ---------- Pipeline principal ----------
 
 def analyze_note(
     note_name: str,
     expected_freq: float,
     signal: np.ndarray,
     sr: int,
-) -> NoteAnalysisResult:
-    """
-    Analyse une note isolée : F0, validation, partiels, inharmonicité, spectre harmonique.
-    """
-    # Étape 1 : F0 stable via YIN restreint autour de la note attendue
+    compute_inharm: bool = True,
+):
+    # Pré-traitement
+    signal = trim_signal(signal, sr)
+
+    # Étape 1 : YIN tracking restreint autour de expected_freq
     f0s = yin_track(signal, sr, expected_freq, semitones=0.5)
     stable_f0, mode_rate = stable_f0_detection(f0s)
 
-    # Étape 2 : validation simple
+    # Étape 2 : Validation YIN
+    yin_valid = True
     if stable_f0 < 20 or mode_rate < 0.4:
-        print(f"❌ {note_name}: signal invalide (f0={stable_f0:.2f}Hz, mode_rate={mode_rate:.2f})")
-        return NoteAnalysisResult(note_name=note_name, valid=False)
+        yin_valid = False
 
-    deviation_cents = 1200 * np.log2(stable_f0 / expected_freq)
-    if abs(deviation_cents) > 50:  # plus d’un demi-ton d’écart
-        print(
-            f"⚠️ {note_name}: hors tolérance (f0={stable_f0:.2f}Hz, "
-            f"expected={expected_freq:.2f}Hz, dev={deviation_cents:.1f}cents)"
-        )
-        return NoteAnalysisResult(note_name=note_name, valid=False)
+    deviation_cents = 1200 * np.log2(stable_f0 / expected_freq) if stable_f0 > 0 else None
+    if deviation_cents is not None and abs(deviation_cents) > 50:
+        yin_valid = False
 
-    print(
-        f"✅ {note_name}: f0={stable_f0:.2f}Hz, expected={expected_freq:.2f}Hz, "
-        f"dev={deviation_cents:.1f}cents, conf={mode_rate:.2f}"
-    )
-
-    # Étape 3 : calcul des partiels (FFT + interpolation) + inharmonicité
+    # Étape 3 : partiels et inharmonicité
     nb_partials = 8
     harmonics, partials, inharmonicity = compute_partials_fft_peaks(
         signal=signal,
         sr=sr,
-        f0_ref=stable_f0,
+        f0_ref=stable_f0 if stable_f0 > 0 else expected_freq,
         nb_partials=nb_partials,
         search_width_cents=60.0,
         pad_factor=2,
     )
 
     partials_hz = [p[0] for p in partials]
-    B = estimate_B(stable_f0, partials_hz) if partials_hz else 0.0
 
-    # Logs console
-    print("FFT partials")
-    print(f"🎼 {note_name}: f0_ref={stable_f0:.2f}")
-    if partials_hz:
-        print(f"  f0_fft≈{partials_hz[0]:.2f} Hz (bin affiné)")
-    print(f"  Harmonics (Hz) : {[round(h, 2) for h in harmonics]}")
-    print(f"  Partials  (Hz) : {[round(f, 2) for f in partials_hz]}")
-    print(f"  Inharm (cents) : {[round(c, 1) for c in inharmonicity]}")
-    print(f"  B estimate     : {B:.3e}")
+    if compute_inharm:
+        inharm_avg = compute_inharmonicity_avg(inharmonicity)
+        B = estimate_B(stable_f0, partials_hz) if partials_hz else None
+    else:
+        inharmonicity = []
+        inharm_avg = None
+        B = None
 
-    # Étape 4 : empreinte spectrale et spectre harmonique
+    # Étape 4 : empreinte spectrale
     spectrum = np.abs(np.fft.rfft(signal))
     spectrum_norm = spectrum / np.max(spectrum) if np.max(spectrum) > 0 else spectrum
     fingerprint = spectrum_norm[:512]
 
-    raw_fp, norm_fp = harmonic_spectrum_fft(signal, sr, stable_f0, nb_harmonics=8)
+    raw_fp, norm_fp = harmonic_spectrum_fft(
+        signal,
+        sr,
+        stable_f0 if stable_f0 > 0 else expected_freq,
+        nb_harmonics=8,
+    )
 
-    print("🎹 Harmonic fingerprint (raw)")
-    for k, (f, amp) in enumerate(raw_fp, start=1):
-        print(f"  H{k}: {f:.2f} Hz, amp={amp:.2f}")
+    # --- Étape 5a : Guess basé sur expected_freq (FFT harmonics)
+    f0_guess_fft, conf_guess_fft = guess_f0_fft(signal, sr, expected_freq)
+    if f0_guess_fft:
+        dev_guess_fft = 1200 * np.log2(f0_guess_fft / expected_freq)
+        print(
+            f"🔍 Guess FFT: f0={f0_guess_fft:.2f}Hz "
+            f"(dev={dev_guess_fft:+.1f}¢, conf={conf_guess_fft:.2f})"
+        )
+        if stable_f0 > 0:
+            diff_cents = 1200 * np.log2(f0_guess_fft / stable_f0)
+            print(f"   ↔ Diff vs YIN: {diff_cents:+.1f}¢")
+    else:
+        print("🔍 Guess FFT: no candidate")
 
-    print("🎹 Harmonic fingerprint (normalized)")
-    for k, (f, amp) in enumerate(norm_fp, start=1):
-        print(f"  H{k}: {f:.2f} Hz, amp_norm={amp:.3f}")
+    # --- Étape 5b : Guess pattern-based (indépendant de expected_freq)
+    guess_pattern = guess_f0_pattern(signal, sr)
+    if guess_pattern.f0:
+        print(f"🔍 Guess Pattern: f0={guess_pattern.f0:.2f}Hz "
+              f"(conf={guess_pattern.confidence:.2f})")
+        for n, freq, err in guess_pattern.matched:
+            print(f"   ↳ Harm {n}: {freq:.2f}Hz ({err:+.1f}¢)")
+        if stable_f0 > 0:
+            diff_cents = 1200 * np.log2(guess_pattern.f0 / stable_f0)
+            print(f"   ↔ Diff vs YIN: {diff_cents:+.1f}¢")
+    else:
+        print("🔍 Guess Pattern: no candidate")
+    
+    # --- Étape 5c : Guess fusion (combine FFT & Pattern, optionnellement guidé par expected)
+    # On passe un hint MIDI si tu l’as sous la main; sinon laisse None.
+    # Ici on calcule un hint depuis expected_freq pour aider la fusion.
+    midi_hint = int(round(69 + 12 * np.log2(expected_freq / 440.0)))
+    guess_fused = guess_f0_fusion(signal, sr, midi_hint=midi_hint)
 
+    if guess_fused.f0:
+        print(
+            f"🔀 Guess Fusion: f0={guess_fused.f0:.2f}Hz "
+            f"(conf={guess_fused.confidence:.2f})"
+        )
+        if stable_f0 > 0:
+            diff_cents = 1200 * np.log2(guess_fused.f0 / stable_f0)
+            print(f"   ↔ Diff vs YIN: {diff_cents:+.1f}¢")
+    else:
+        print("🔀 Guess Fusion: no candidate")
+
+    # --- Retour final (YIN reste la référence pour f0)
     return NoteAnalysisResult(
         note_name=note_name,
-        valid=True,
-        f0=stable_f0,
+        valid=yin_valid,
+        f0=stable_f0 if stable_f0 > 0 else None,
         confidence=mode_rate,
         deviation_cents=deviation_cents,
         expected_freq=expected_freq,
         harmonics=harmonics,
         partials=partials_hz,
-        inharmonicity=inharmonicity,
+        inharmonicity=inharmonicity if compute_inharm else None,
+        inharmonicity_avg=inharm_avg,
+        B_estimate=B,
         spectral_fingerprint=fingerprint,
-        harmonic_spectrum_raw=raw_fp,     # amplitudes brutes
-        harmonic_spectrum_norm=norm_fp,   # amplitudes normalisées (0–1)
+        harmonic_spectrum_raw=raw_fp,
+        harmonic_spectrum_norm=norm_fp,
     )

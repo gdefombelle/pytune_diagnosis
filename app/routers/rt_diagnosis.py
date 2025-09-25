@@ -74,7 +74,13 @@ async def ws_diagnosis(ws: WebSocket):
 
                 # 3) Analyse via pipeline
                 expected_freq = midi_to_freq(meta.note_expected)
-                result = analyze_note(str(meta.note_expected), expected_freq, signal, sr)
+                result = analyze_note(
+                    str(meta.note_expected),
+                    expected_freq,
+                    signal,
+                    sr,
+                    compute_inharm=meta.compute_inharm
+                )
 
                 # 4) Réponse enrichie → alignée au frontend
                 result_dict = result.model_dump()

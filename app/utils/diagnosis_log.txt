@@ -1,0 +1,657 @@
+
+🎹 Received note 21, 287744 bytes
+🔍 Guess FFT: f0=27.30Hz (dev=-12.7¢, conf=0.75)
+   ↔ Diff vs YIN: -17.3¢
+🔍 Guess Pattern: f0=136.45Hz (conf=0.20)
+   ↳ Harm 1: 136.45Hz (+0.0¢)
+   ↳ Harm 2: 273.24Hz (+2.1¢)
+   ↔ Diff vs YIN: +2768.5¢
+🎹 Received note 22, 287232 bytes
+🔍 Guess FFT: f0=28.93Hz (dev=-12.3¢, conf=0.75)
+   ↔ Diff vs YIN: -11.8¢
+🔍 Guess Pattern: f0=144.57Hz (conf=0.20)
+   ↳ Harm 1: 144.57Hz (+0.0¢)
+   ↳ Harm 2: 289.21Hz (+0.5¢)
+   ↔ Diff vs YIN: +2773.5¢
+🎹 Received note 23, 286720 bytes
+🔍 Guess FFT: f0=61.49Hz (dev=+1193.2¢, conf=0.75)
+   ↔ Diff vs YIN: +1188.6¢
+🔍 Guess Pattern: f0=122.90Hz (conf=0.20)
+   ↳ Harm 1: 122.90Hz (+0.0¢)
+   ↳ Harm 3: 368.62Hz (-0.4¢)
+   ↔ Diff vs YIN: +2387.4¢
+🎹 Received note 24, 288256 bytes
+🔍 Guess FFT: f0=32.50Hz (dev=-10.8¢, conf=0.88)
+   ↔ Diff vs YIN: -6.4¢
+🔍 Guess Pattern: f0=130.08Hz (conf=0.30)
+   ↳ Harm 1: 130.08Hz (+0.0¢)
+   ↳ Harm 2: 260.92Hz (+5.0¢)
+   ↳ Harm 3: 393.17Hz (+12.9¢)
+   ↔ Diff vs YIN: +2394.7¢
+🎹 Received note 25, 287232 bytes
+🔍 Guess FFT: f0=69.18Hz (dev=+1197.0¢, conf=1.00)
+   ↔ Diff vs YIN: +1201.7¢
+🔍 Guess Pattern: f0=137.63Hz (conf=0.30)
+   ↳ Harm 1: 137.63Hz (+0.0¢)
+   ↳ Harm 2: 276.17Hz (+5.8¢)
+   ↳ Harm 3: 413.71Hz (+3.5¢)
+   ↔ Diff vs YIN: +2392.6¢
+🎹 Received note 26, 287232 bytes
+🔍 Guess FFT: f0=73.16Hz (dev=+1194.0¢, conf=0.88)
+   ↔ Diff vs YIN: +1201.4¢
+🔍 Guess Pattern: f0=72.91Hz (conf=0.60)
+   ↳ Harm 1: 72.91Hz (+0.0¢)
+   ↳ Harm 2: 145.82Hz (+0.0¢)
+   ↳ Harm 3: 219.15Hz (+3.3¢)
+   ↳ Harm 4: 292.64Hz (+5.9¢)
+   ↳ Harm 5: 364.55Hz (+0.0¢)
+   ↳ Harm 6: 439.46Hz (+7.9¢)
+   ↔ Diff vs YIN: +1195.4¢
+🎹 Received note 27, 288256 bytes
+🔍 Guess FFT: f0=38.67Hz (dev=-10.0¢, conf=0.75)
+   ↔ Diff vs YIN: -5.9¢
+🔍 Guess Pattern: f0=271.08Hz (conf=0.30)
+   ↳ Harm 1: 271.08Hz (+0.0¢)
+   ↳ Harm 2: 542.42Hz (+0.8¢)
+   ↳ Harm 4: 1092.67Hz (+13.3¢)
+   ↔ Diff vs YIN: +3365.5¢
+🎹 Received note 28, 288256 bytes
+🔍 Guess FFT: f0=41.00Hz (dev=-8.6¢, conf=0.88)
+   ↔ Diff vs YIN: -4.7¢
+🔍 Guess Pattern: f0=122.92Hz (conf=0.40)
+   ↳ Harm 1: 122.92Hz (+0.0¢)
+   ↳ Harm 2: 246.33Hz (+3.5¢)
+   ↳ Harm 3: 369.25Hz (+2.3¢)
+   ↳ Harm 4: 493.50Hz (+6.4¢)
+   ↔ Diff vs YIN: +1896.1¢
+🎹 Received note 29, 288768 bytes
+🔍 Guess FFT: f0=43.50Hz (dev=-6.1¢, conf=0.75)
+   ↔ Diff vs YIN: -1.6¢
+🔍 Guess Pattern: f0=130.42Hz (conf=0.40)
+   ↳ Harm 1: 130.42Hz (+0.0¢)
+   ↳ Harm 2: 260.50Hz (-2.2¢)
+   ↳ Harm 3: 393.08Hz (+8.1¢)
+   ↳ Harm 4: 526.00Hz (+14.3¢)
+   ↔ Diff vs YIN: +1899.2¢
+🎹 Received note 30, 288768 bytes
+🔍 Guess FFT: f0=46.08Hz (dev=-6.2¢, conf=0.75)
+   ↔ Diff vs YIN: -3.5¢
+🔍 Guess Pattern: f0=138.17Hz (conf=0.40)
+   ↳ Harm 1: 138.17Hz (+0.0¢)
+   ↳ Harm 2: 276.58Hz (+1.6¢)
+   ↳ Harm 3: 415.50Hz (+4.2¢)
+   ↳ Harm 4: 552.92Hz (+0.8¢)
+   ↔ Diff vs YIN: +1897.4¢
+🎹 Received note 31, 287744 bytes
+🔍 Guess FFT: f0=48.83Hz (dev=-6.0¢, conf=0.75)
+   ↔ Diff vs YIN: -2.3¢
+🔍 Guess Pattern: f0=146.49Hz (conf=0.50)
+   ↳ Harm 1: 146.49Hz (+0.0¢)
+   ↳ Harm 2: 292.98Hz (+0.0¢)
+   ↳ Harm 3: 439.46Hz (+0.0¢)
+   ↳ Harm 4: 587.54Hz (+4.7¢)
+   ↳ Harm 5: 737.46Hz (+11.8¢)
+   ↔ Diff vs YIN: +1899.6¢
+🎹 Received note 32, 288768 bytes
+🔍 Guess FFT: f0=51.67Hz (dev=-8.2¢, conf=0.88)
+   ↔ Diff vs YIN: -2.2¢
+🔍 Guess Pattern: f0=155.08Hz (conf=0.50)
+   ↳ Harm 1: 155.08Hz (+0.0¢)
+   ↳ Harm 2: 310.33Hz (+0.9¢)
+   ↳ Harm 3: 464.92Hz (-1.2¢)
+   ↳ Harm 4: 621.17Hz (+2.3¢)
+   ↳ Harm 5: 779.83Hz (+9.8¢)
+   ↔ Diff vs YIN: +1900.7¢
+🎹 Received note 33, 288256 bytes
+🔍 Guess FFT: f0=54.83Hz (dev=-5.3¢, conf=1.00)
+   ↔ Diff vs YIN: -1.2¢
+🔍 Guess Pattern: f0=164.33Hz (conf=0.40)
+   ↳ Harm 1: 164.33Hz (+0.0¢)
+   ↳ Harm 2: 329.08Hz (+2.2¢)
+   ↳ Harm 3: 493.42Hz (+1.5¢)
+   ↳ Harm 4: 660.50Hz (+8.3¢)
+   ↔ Diff vs YIN: +1899.0¢
+🎹 Received note 34, 288256 bytes
+🔍 Guess FFT: f0=58.08Hz (dev=-5.6¢, conf=0.88)
+   ↔ Diff vs YIN: -1.0¢
+🔍 Guess Pattern: f0=116.08Hz (conf=0.60)
+   ↳ Harm 1: 116.08Hz (+0.0¢)
+   ↳ Harm 2: 232.33Hz (+1.2¢)
+   ↳ Harm 3: 348.58Hz (+1.7¢)
+   ↳ Harm 5: 582.17Hz (+5.2¢)
+   ↳ Harm 6: 699.83Hz (+8.3¢)
+   ↳ Harm 7: 818.00Hz (+11.5¢)
+   ↔ Diff vs YIN: +1197.7¢
+🎹 Received note 35, 288256 bytes
+🔍 Guess FFT: f0=61.71Hz (dev=-0.6¢, conf=0.88)
+   ↔ Diff vs YIN: +1.5¢
+🔍 Guess Pattern: f0=123.17Hz (conf=0.50)
+   ↳ Harm 1: 123.17Hz (+0.0¢)
+   ↳ Harm 2: 246.33Hz (+0.0¢)
+   ↳ Harm 3: 369.83Hz (+1.6¢)
+   ↳ Harm 5: 617.83Hz (+5.6¢)
+   ↳ Harm 7: 867.83Hz (+11.3¢)
+   ↔ Diff vs YIN: +1197.9¢
+🎹 Received note 36, 287232 bytes
+🔍 Guess FFT: f0=65.13Hz (dev=-7.2¢, conf=0.75)
+   ↔ Diff vs YIN: -1.6¢
+🔍 Guess Pattern: f0=130.35Hz (conf=0.30)
+   ↳ Harm 1: 130.35Hz (+0.0¢)
+   ↳ Harm 2: 260.87Hz (+1.1¢)
+   ↳ Harm 3: 391.56Hz (+2.2¢)
+   ↔ Diff vs YIN: +1199.5¢
+🎹 Received note 37, 288768 bytes
+🔍 Guess FFT: f0=69.17Hz (dev=-3.2¢, conf=0.88)
+   ↔ Diff vs YIN: +0.2¢
+🔍 Guess Pattern: f0=138.25Hz (conf=0.30)
+   ↳ Harm 1: 138.25Hz (+0.0¢)
+   ↳ Harm 2: 276.50Hz (+0.0¢)
+   ↳ Harm 3: 415.00Hz (+1.0¢)
+   ↔ Diff vs YIN: +1199.1¢
+🎹 Received note 38, 288256 bytes
+🔍 Guess FFT: f0=73.17Hz (dev=-5.9¢, conf=0.88)
+   ↔ Diff vs YIN: -1.4¢
+🔍 Guess Pattern: f0=219.58Hz (conf=0.40)
+   ↳ Harm 1: 219.58Hz (+0.0¢)
+   ↳ Harm 2: 439.50Hz (+1.3¢)
+   ↳ Harm 3: 660.17Hz (+3.7¢)
+   ↳ Harm 4: 882.42Hz (+8.0¢)
+   ↔ Diff vs YIN: +1901.2¢
+🎹 Received note 39, 287744 bytes
+🔍 Guess FFT: f0=77.56Hz (dev=-4.9¢, conf=0.88)
+   ↔ Diff vs YIN: -0.1¢
+🔍 Guess Pattern: f0=77.51Hz (conf=0.80)
+   ↳ Harm 1: 77.51Hz (+0.0¢)
+   ↳ Harm 2: 154.93Hz (-0.9¢)
+   ↳ Harm 3: 232.36Hz (-1.2¢)
+   ↳ Harm 4: 309.95Hz (-0.5¢)
+   ↳ Harm 5: 387.54Hz (-0.0¢)
+   ↳ Harm 6: 465.38Hz (+1.2¢)
+   ↳ Harm 7: 542.31Hz (-0.8¢)
+   ↳ Harm 10: 778.01Hz (+6.5¢)
+   ↔ Diff vs YIN: -1.3¢
+🎹 Received note 40, 288256 bytes
+🔍 Guess FFT: f0=82.29Hz (dev=-2.4¢, conf=0.88)
+   ↔ Diff vs YIN: -1.2¢
+🔍 Guess Pattern: f0=164.75Hz (conf=0.40)
+   ↳ Harm 1: 164.75Hz (+0.0¢)
+   ↳ Harm 2: 329.25Hz (-1.3¢)
+   ↳ Harm 3: 494.33Hz (+0.3¢)
+   ↳ Harm 5: 825.00Hz (+2.6¢)
+   ↔ Diff vs YIN: +1200.6¢
+🎹 Received note 41, 288768 bytes
+🔍 Guess FFT: f0=86.83Hz (dev=-9.4¢, conf=0.88)
+   ↔ Diff vs YIN: -1.8¢
+🔍 Guess Pattern: f0=260.67Hz (conf=0.20)
+   ↳ Harm 1: 260.67Hz (+0.0¢)
+   ↳ Harm 2: 521.00Hz (-1.1¢)
+   ↔ Diff vs YIN: +1901.3¢
+🎹 Received note 42, 288256 bytes
+🔍 Guess FFT: f0=92.42Hz (dev=-1.5¢, conf=0.62)
+   ↔ Diff vs YIN: +0.7¢
+🔍 Guess Pattern: f0=277.00Hz (conf=0.30)
+   ↳ Harm 1: 277.00Hz (+0.0¢)
+   ↳ Harm 2: 553.67Hz (-1.0¢)
+   ↳ Harm 3: 834.25Hz (+6.8¢)
+   ↔ Diff vs YIN: +1901.1¢
+🎹 Received note 43, 288768 bytes
+🔍 Guess FFT: f0=97.83Hz (dev=-2.9¢, conf=0.88)
+   ↔ Diff vs YIN: -0.2¢
+🔍 Guess Pattern: f0=293.42Hz (conf=0.30)
+   ↳ Harm 1: 293.42Hz (+0.0¢)
+   ↳ Harm 2: 587.17Hz (+1.0¢)
+   ↳ Harm 3: 882.58Hz (+4.6¢)
+   ↔ Diff vs YIN: +1901.3¢
+🎹 Received note 44, 288768 bytes
+🔍 Guess FFT: f0=103.67Hz (dev=-2.7¢, conf=0.62)
+   ↔ Diff vs YIN: +0.1¢
+🔍 Guess Pattern: f0=207.33Hz (conf=0.30)
+   ↳ Harm 1: 207.33Hz (+0.0¢)
+   ↳ Harm 2: 414.33Hz (-1.4¢)
+   ↳ Harm 3: 622.25Hz (+0.7¢)
+   ↔ Diff vs YIN: +1200.1¢
+🎹 Received note 45, 288256 bytes
+🔍 Guess FFT: f0=109.83Hz (dev=-2.6¢, conf=0.62)
+   ↔ Diff vs YIN: +0.4¢
+🔍 Guess Pattern: f0=219.58Hz (conf=0.20)
+   ↳ Harm 1: 219.58Hz (+0.0¢)
+   ↳ Harm 2: 439.42Hz (+1.0¢)
+   ↔ Diff vs YIN: +1199.7¢
+🎹 Received note 46, 288768 bytes
+🔍 Guess FFT: f0=116.33Hz (dev=-3.1¢, conf=0.88)
+   ↔ Diff vs YIN: -0.0¢
+🔍 Guess Pattern: f0=348.92Hz (conf=0.20)
+   ↳ Harm 1: 348.92Hz (+0.0¢)
+   ↳ Harm 2: 697.92Hz (+0.2¢)
+   ↔ Diff vs YIN: +1901.5¢
+🎹 Received note 47, 288256 bytes
+🔍 Guess FFT: f0=123.25Hz (dev=-3.1¢, conf=0.75)
+   ↔ Diff vs YIN: +0.9¢
+🔍 Guess Pattern: f0=369.50Hz (conf=0.20)
+   ↳ Harm 1: 369.50Hz (+0.0¢)
+   ↳ Harm 2: 740.17Hz (+2.7¢)
+   ↔ Diff vs YIN: +1901.7¢
+🎹 Received note 48, 288768 bytes
+🔍 Guess FFT: f0=130.50Hz (dev=-4.1¢, conf=0.38)
+   ↔ Diff vs YIN: -0.6¢
+🔍 Guess Pattern: f0=130.50Hz (conf=0.40)
+   ↳ Harm 1: 130.50Hz (+0.0¢)
+   ↳ Harm 2: 261.08Hz (+0.6¢)
+   ↳ Harm 3: 391.67Hz (+0.7¢)
+   ↳ Harm 4: 522.50Hz (+1.7¢)
+   ↔ Diff vs YIN: -0.6¢
+🎹 Received note 49, 286720 bytes
+🔍 Guess FFT: f0=138.26Hz (dev=-4.2¢, conf=0.50)
+   ↔ Diff vs YIN: +0.4¢
+🔍 Guess Pattern: f0=138.17Hz (conf=0.40)
+   ↳ Harm 1: 138.17Hz (+0.0¢)
+   ↳ Harm 2: 276.51Hz (+1.1¢)
+   ↳ Harm 3: 414.85Hz (+1.4¢)
+   ↳ Harm 4: 553.52Hz (+2.6¢)
+   ↔ Diff vs YIN: -0.6¢
+🎹 Received note 50, 288256 bytes
+🔍 Guess FFT: f0=146.64Hz (dev=-2.2¢, conf=0.62)
+   ↔ Diff vs YIN: -0.3¢
+🔍 Guess Pattern: f0=146.48Hz (conf=0.60)
+   ↳ Harm 1: 146.48Hz (+0.0¢)
+   ↳ Harm 2: 293.37Hz (+2.5¢)
+   ↳ Harm 3: 439.26Hz (-0.7¢)
+   ↳ Harm 4: 585.65Hz (-0.7¢)
+   ↳ Harm 5: 734.65Hz (+5.3¢)
+   ↳ Harm 6: 882.30Hz (+6.8¢)
+   ↔ Diff vs YIN: -2.3¢
+🎹 Received note 51, 287744 bytes
+🔍 Guess FFT: f0=155.35Hz (dev=-2.4¢, conf=0.62)
+   ↔ Diff vs YIN: +0.7¢
+🔍 Guess Pattern: f0=155.27Hz (conf=0.50)
+   ↳ Harm 1: 155.27Hz (+0.0¢)
+   ↳ Harm 2: 310.54Hz (+0.0¢)
+   ↳ Harm 3: 465.80Hz (+0.0¢)
+   ↳ Harm 4: 621.49Hz (+1.2¢)
+   ↳ Harm 5: 777.42Hz (+2.4¢)
+   ↔ Diff vs YIN: -0.2¢
+🎹 Received note 52, 288256 bytes
+🔍 Guess FFT: f0=164.50Hz (dev=-3.3¢, conf=0.38)
+   ↔ Diff vs YIN: -0.3¢
+🔍 Guess Pattern: f0=329.00Hz (conf=0.10)
+   ↳ Harm 1: 329.00Hz (+0.0¢)
+   ↔ Diff vs YIN: +1199.7¢
+🎹 Received note 53, 288256 bytes
+🔍 Guess FFT: f0=174.33Hz (dev=-2.8¢, conf=0.50)
+   ↔ Diff vs YIN: -0.4¢
+🔍 Guess Pattern: f0=348.75Hz (conf=0.20)
+   ↳ Harm 1: 348.75Hz (+0.0¢)
+   ↳ Harm 2: 698.42Hz (+2.3¢)
+   ↔ Diff vs YIN: +1200.0¢
+🎹 Received note 54, 288768 bytes
+🔍 Guess FFT: f0=184.75Hz (dev=-2.3¢, conf=0.38)
+   ↔ Diff vs YIN: -0.0¢
+🔍 Guess Pattern: f0=369.50Hz (conf=0.20)
+   ↳ Harm 1: 369.50Hz (+0.0¢)
+   ↳ Harm 2: 739.25Hz (+0.6¢)
+   ↔ Diff vs YIN: +1200.0¢
+🎹 Received note 55, 288256 bytes
+🔍 Guess FFT: f0=195.75Hz (dev=-2.2¢, conf=0.75)
+   ↔ Diff vs YIN: +0.4¢
+🔍 Guess Pattern: f0=195.50Hz (conf=0.60)
+   ↳ Harm 1: 195.50Hz (+0.0¢)
+   ↳ Harm 2: 390.58Hz (-1.8¢)
+   ↳ Harm 3: 586.25Hz (-0.7¢)
+   ↳ Harm 4: 784.33Hz (+5.2¢)
+   ↳ Harm 5: 981.25Hz (+6.6¢)
+   ↳ Harm 6: 1179.08Hz (+9.0¢)
+   ↔ Diff vs YIN: -1.8¢
+🎹 Received note 56, 288256 bytes
+🔍 Guess FFT: f0=207.72Hz (dev=+0.6¢, conf=0.38)
+   ↔ Diff vs YIN: +1.9¢
+🔍 Guess Pattern: f0=207.25Hz (conf=0.40)
+   ↳ Harm 1: 207.25Hz (+0.0¢)
+   ↳ Harm 2: 414.08Hz (-1.7¢)
+   ↳ Harm 3: 621.50Hz (-0.7¢)
+   ↳ Harm 4: 831.08Hz (+4.3¢)
+   ↔ Diff vs YIN: -2.0¢
+🎹 Received note 57, 288768 bytes
+🔍 Guess FFT: f0=219.50Hz (dev=-3.9¢, conf=0.38)
+   ↔ Diff vs YIN: -3.5¢
+🔍 Guess Pattern: f0=439.83Hz (conf=0.20)
+   ↳ Harm 1: 439.83Hz (+0.0¢)
+   ↳ Harm 2: 881.25Hz (+3.1¢)
+   ↔ Diff vs YIN: +1199.8¢
+🎹 Received note 58, 288256 bytes
+🔍 Guess FFT: f0=233.58Hz (dev=+3.7¢, conf=0.88)
+   ↔ Diff vs YIN: +2.6¢
+🔍 Guess Pattern: f0=232.67Hz (conf=0.60)
+   ↳ Harm 1: 232.67Hz (+0.0¢)
+   ↳ Harm 2: 465.08Hz (-0.9¢)
+   ↳ Harm 3: 699.17Hz (+2.9¢)
+   ↳ Harm 4: 932.58Hz (+3.6¢)
+   ↳ Harm 5: 1169.58Hz (+9.3¢)
+   ↳ Harm 6: 1405.75Hz (+12.0¢)
+   ↔ Diff vs YIN: -4.2¢
+🎹 Received note 59, 288768 bytes
+🔍 Guess FFT: f0=247.00Hz (dev=+0.4¢, conf=0.25)
+   ↔ Diff vs YIN: -0.2¢
+🔍 Guess Pattern: f0=494.00Hz (conf=0.20)
+   ↳ Harm 1: 494.00Hz (+0.0¢)
+   ↳ Harm 2: 989.75Hz (+3.1¢)
+   ↔ Diff vs YIN: +1199.8¢
+🎹 Received note 60, 192000 bytes
+🔍 Guess FFT: f0=261.56Hz (dev=-0.4¢, conf=0.12)
+   ↔ Diff vs YIN: -4.5¢
+🔍 Guess Pattern: f0=261.56Hz (conf=0.30)
+   ↳ Harm 1: 261.56Hz (+0.0¢)
+   ↳ Harm 3: 785.93Hz (+2.8¢)
+   ↳ Harm 5: 1313.07Hz (+7.0¢)
+   ↔ Diff vs YIN: -4.5¢
+🎹 Received note 61, 192000 bytes
+🔍 Guess FFT: f0=277.14Hz (dev=-0.3¢, conf=0.38)
+   ↔ Diff vs YIN: -1.4¢
+🔍 Guess Pattern: f0=554.65Hz (conf=0.10)
+   ↳ Harm 1: 554.65Hz (+0.0¢)
+   ↔ Diff vs YIN: +1199.8¢
+🎹 Received note 62, 192000 bytes
+🔍 Guess FFT: f0=293.47Hz (dev=-1.2¢, conf=0.38)
+   ↔ Diff vs YIN: +1.5¢
+🔍 Guess Pattern: f0=293.47Hz (conf=0.50)
+   ↳ Harm 1: 293.47Hz (+0.0¢)
+   ↳ Harm 2: 586.93Hz (+0.0¢)
+   ↳ Harm 3: 881.16Hz (+1.5¢)
+   ↳ Harm 4: 1176.88Hz (+4.4¢)
+   ↳ Harm 6: 1774.37Hz (+13.3¢)
+   ↔ Diff vs YIN: +1.5¢
+🎹 Received note 63, 192000 bytes
+🔍 Guess FFT: f0=312.31Hz (dev=+6.6¢, conf=0.75)
+   ↔ Diff vs YIN: +3.6¢
+🔍 Guess Pattern: f0=311.31Hz (conf=0.50)
+   ↳ Harm 1: 311.31Hz (+0.0¢)
+   ↳ Harm 2: 622.86Hz (+0.7¢)
+   ↳ Harm 3: 935.18Hz (+2.3¢)
+   ↳ Harm 4: 1249.25Hz (+5.6¢)
+   ↳ Harm 5: 1564.57Hz (+8.9¢)
+   ↔ Diff vs YIN: -2.0¢
+🎹 Received note 64, 192000 bytes
+🔍 Guess FFT: f0=329.40Hz (dev=-1.2¢, conf=0.38)
+   ↔ Diff vs YIN: -2.1¢
+🔍 Guess Pattern: f0=329.40Hz (conf=0.30)
+   ↳ Harm 1: 329.40Hz (+0.0¢)
+   ↳ Harm 2: 659.67Hz (+2.3¢)
+   ↳ Harm 3: 990.45Hz (+4.0¢)
+   ↔ Diff vs YIN: -2.1¢
+🎹 Received note 65, 192512 bytes
+🔍 Guess FFT: f0=349.50Hz (dev=+1.3¢, conf=0.25)
+   ↔ Diff vs YIN: -1.4¢
+🔍 Guess Pattern: f0=349.38Hz (conf=0.20)
+   ↳ Harm 1: 349.38Hz (+0.0¢)
+   ↳ Harm 2: 699.12Hz (+0.9¢)
+   ↔ Diff vs YIN: -2.1¢
+🎹 Received note 66, 192512 bytes
+🔍 Guess FFT: f0=370.00Hz (dev=+0.0¢, conf=0.25)
+   ↔ Diff vs YIN: +0.3¢
+🔍 Guess Pattern: f0=369.88Hz (conf=0.20)
+   ↳ Harm 1: 369.88Hz (+0.0¢)
+   ↳ Harm 2: 740.50Hz (+1.8¢)
+   ↔ Diff vs YIN: -0.3¢
+🎹 Received note 67, 192512 bytes
+🔍 Guess FFT: f0=392.00Hz (dev=+0.0¢, conf=0.12)
+   ↔ Diff vs YIN: +0.6¢
+🔍 Guess Pattern: f0=391.88Hz (conf=0.20)
+   ↳ Harm 1: 391.88Hz (+0.0¢)
+   ↳ Harm 2: 783.88Hz (+0.3¢)
+   ↔ Diff vs YIN: +0.0¢
+🎹 Received note 68, 192000 bytes
+🔍 Guess FFT: f0=415.70Hz (dev=+1.7¢, conf=0.38)
+   ↔ Diff vs YIN: +1.7¢
+🔍 Guess Pattern: f0=415.20Hz (conf=0.30)
+   ↳ Harm 1: 415.20Hz (+0.0¢)
+   ↳ Harm 2: 830.03Hz (-0.8¢)
+   ↳ Harm 3: 1247.99Hz (+3.3¢)
+   ↔ Diff vs YIN: -0.4¢
+🎹 Received note 69, 192000 bytes
+🔍 Guess FFT: f0=439.95Hz (dev=-0.2¢, conf=0.25)
+   ↔ Diff vs YIN: -0.4¢
+🔍 Guess Pattern: f0=439.95Hz (conf=0.20)
+   ↳ Harm 1: 439.95Hz (+0.0¢)
+   ↳ Harm 2: 881.03Hz (+2.2¢)
+   ↔ Diff vs YIN: -0.4¢
+🎹 Received note 70, 192000 bytes
+🔍 Guess FFT: f0=466.08Hz (dev=-0.3¢, conf=0.38)
+   ↔ Diff vs YIN: -0.5¢
+🔍 Guess Pattern: f0=466.08Hz (conf=0.30)
+   ↳ Harm 1: 466.08Hz (+0.0¢)
+   ↳ Harm 2: 933.42Hz (+2.3¢)
+   ↳ Harm 3: 1403.27Hz (+6.2¢)
+   ↔ Diff vs YIN: -0.5¢
+🎹 Received note 71, 192512 bytes
+🔍 Guess FFT: f0=494.25Hz (dev=+1.3¢, conf=0.12)
+   ↔ Diff vs YIN: +0.1¢
+🔍 Guess Pattern: f0=494.25Hz (conf=0.10)
+   ↳ Harm 1: 494.25Hz (+0.0¢)
+   ↔ Diff vs YIN: +0.1¢
+🎹 Received note 72, 134656 bytes
+🔍 Guess FFT: f0=525.71Hz (dev=+8.1¢, conf=0.25)
+   ↔ Diff vs YIN: +6.6¢
+🔍 Guess Pattern: f0=523.57Hz (conf=0.10)
+   ↳ Harm 1: 523.57Hz (+0.0¢)
+   ↔ Diff vs YIN: -0.5¢
+🎹 Received note 73, 134656 bytes
+🔍 Guess FFT: f0=553.97Hz (dev=-1.2¢, conf=0.12)
+   ↔ Diff vs YIN: -0.6¢
+🔍 Guess Pattern: f0=554.17Hz (conf=0.10)
+   ↳ Harm 1: 554.17Hz (+0.0¢)
+   ↔ Diff vs YIN: -0.0¢
+🎹 Received note 74, 134656 bytes
+🔍 Guess FFT: f0=587.86Hz (dev=+1.6¢, conf=0.25)
+   ↔ Diff vs YIN: -0.4¢
+🔍 Guess Pattern: f0=587.86Hz (conf=0.30)
+   ↳ Harm 1: 587.86Hz (+0.0¢)
+   ↳ Harm 2: 1178.04Hz (+3.4¢)
+   ↳ Harm 4: 2370.89Hz (+14.3¢)
+   ↔ Diff vs YIN: -0.4¢
+🎹 Received note 75, 134656 bytes
+🔍 Guess FFT: f0=622.63Hz (dev=+1.1¢, conf=0.12)
+   ↔ Diff vs YIN: -0.8¢
+🔍 Guess Pattern: f0=622.89Hz (conf=0.20)
+   ↳ Harm 1: 622.89Hz (+0.0¢)
+   ↳ Harm 2: 1248.42Hz (+3.7¢)
+   ↔ Diff vs YIN: -0.0¢
+🎹 Received note 76, 135168 bytes
+🔍 Guess FFT: f0=700.89Hz (dev=+106.0¢, conf=0.38)
+   ↔ Diff vs YIN: +37.9¢
+🔍 Guess Pattern: f0=699.46Hz (conf=0.30)
+   ↳ Harm 1: 699.46Hz (+0.0¢)
+   ↳ Harm 2: 1399.64Hz (+0.9¢)
+   ↳ Harm 3: 2110.54Hz (+10.0¢)
+   ↔ Diff vs YIN: +34.4¢
+🎹 Received note 77, 135168 bytes
+🔍 Guess FFT: f0=741.07Hz (dev=+102.5¢, conf=0.25)
+   ↔ Diff vs YIN: +32.5¢
+🔍 Guess Pattern: f0=740.89Hz (conf=0.20)
+   ↳ Harm 1: 740.89Hz (+0.0¢)
+   ↳ Harm 2: 1482.86Hz (+1.3¢)
+   ↔ Diff vs YIN: +32.1¢
+🎹 Received note 78, 134656 bytes
+🔍 Guess FFT: f0=742.86Hz (dev=+6.7¢, conf=0.25)
+   ↔ Diff vs YIN: +2.7¢
+🔍 Guess Pattern: f0=741.07Hz (conf=0.30)
+   ↳ Harm 1: 741.07Hz (+0.0¢)
+   ↳ Harm 2: 1481.79Hz (-0.4¢)
+   ↳ Harm 3: 2236.79Hz (+10.5¢)
+   ↔ Diff vs YIN: -1.5¢
+🎹 Received note 79, 134656 bytes
+🔍 Guess FFT: f0=791.74Hz (dev=+17.0¢, conf=0.38)
+   ↔ Diff vs YIN: +7.7¢
+🔍 Guess Pattern: f0=785.65Hz (conf=0.20)
+   ↳ Harm 1: 785.65Hz (+0.0¢)
+   ↳ Harm 2: 1573.26Hz (+2.2¢)
+   ↔ Diff vs YIN: -5.7¢
+🎹 Received note 80, 134144 bytes
+🔍 Guess FFT: f0=832.50Hz (dev=+3.9¢, conf=0.25)
+   ↔ Diff vs YIN: +0.1¢
+🔍 Guess Pattern: f0=832.25Hz (conf=0.20)
+   ↳ Harm 1: 832.25Hz (+0.0¢)
+   ↳ Harm 2: 1669.00Hz (+4.7¢)
+   ↔ Diff vs YIN: -0.4¢
+🎹 Received note 81, 135168 bytes
+🔍 Guess FFT: f0=881.69Hz (dev=+3.3¢, conf=0.38)
+   ↔ Diff vs YIN: -1.3¢
+🔍 Guess Pattern: f0=881.69Hz (conf=0.30)
+   ↳ Harm 1: 881.69Hz (+0.0¢)
+   ↳ Harm 2: 1770.42Hz (+6.9¢)
+   ↳ Harm 3: 2667.25Hz (+14.5¢)
+   ↔ Diff vs YIN: -1.3¢
+🎹 Received note 82, 134656 bytes
+🔍 Guess FFT: f0=137.43Hz (dev=-3314.6¢, conf=0.75)
+   ↔ Diff vs YIN: -3326.1¢
+🔍 Guess Pattern: f0=935.33Hz (conf=0.30)
+   ↳ Harm 1: 935.33Hz (+0.0¢)
+   ↳ Harm 2: 1870.67Hz (+0.0¢)
+   ↳ Harm 3: 2829.00Hz (+14.1¢)
+   ↔ Diff vs YIN: -5.9¢
+🎹 Received note 83, 135168 bytes
+🔍 Guess FFT: f0=122.30Hz (dev=-3616.4¢, conf=0.38)
+   ↔ Diff vs YIN: -3626.3¢
+🔍 Guess Pattern: f0=991.67Hz (conf=0.20)
+   ↳ Harm 1: 991.67Hz (+0.0¢)
+   ↳ Harm 2: 1984.07Hz (+0.6¢)
+   ↔ Diff vs YIN: -3.1¢
+🎹 Received note 84, 134144 bytes
+🔍 Guess FFT: f0=1053.60Hz (dev=+11.7¢, conf=0.38)
+   ↔ Diff vs YIN: -0.2¢
+🔍 Guess Pattern: f0=1051.98Hz (conf=0.20)
+   ↳ Harm 1: 1051.98Hz (+0.0¢)
+   ↳ Harm 2: 2106.47Hz (+2.1¢)
+   ↔ Diff vs YIN: -2.9¢
+🎹 Received note 85, 134144 bytes
+🔍 Guess FFT: f0=557.29Hz (dev=-1190.9¢, conf=0.38)
+   ↔ Diff vs YIN: -1203.1¢
+🔍 Guess Pattern: f0=1114.58Hz (conf=0.20)
+   ↳ Harm 1: 1114.58Hz (+0.0¢)
+   ↳ Harm 2: 2229.17Hz (+0.0¢)
+   ↔ Diff vs YIN: -3.1¢
+🎹 Received note 86, 134144 bytes
+🔍 Guess FFT: f0=1180.29Hz (dev=+8.3¢, conf=0.25)
+   ↔ Diff vs YIN: -1.9¢
+🔍 Guess Pattern: f0=1180.53Hz (conf=0.20)
+   ↳ Harm 1: 1180.53Hz (+0.0¢)
+   ↳ Harm 2: 2368.51Hz (+5.5¢)
+   ↔ Diff vs YIN: -1.5¢
+🎹 Received note 87, 135168 bytes
+🔍 Guess FFT: f0=26.07Hz (dev=-6692.4¢, conf=0.62)
+   ↔ Diff vs YIN: -6764.3¢
+🔍 Guess Pattern: f0=1250.00Hz (conf=0.20)
+   ↳ Harm 1: 1250.00Hz (+0.0¢)
+   ↳ Harm 2: 2510.54Hz (+7.3¢)
+   ↔ Diff vs YIN: -64.3¢
+🎹 Received note 88, 135168 bytes
+🔍 Guess FFT: f0=36.90Hz (dev=-6190.7¢, conf=0.88)
+   ↔ Diff vs YIN: -6258.9¢
+🔍 Guess Pattern: f0=1325.00Hz (conf=0.20)
+   ↳ Harm 1: 1325.00Hz (+0.0¢)
+   ↳ Harm 2: 2649.82Hz (-0.1¢)
+   ↔ Diff vs YIN: -59.6¢
+🎹 Received note 89, 135168 bytes
+🔍 Guess FFT: f0=36.67Hz (dev=-6302.0¢, conf=0.88)
+   ↔ Diff vs YIN: -6371.9¢
+🔍 Guess Pattern: f0=1405.36Hz (conf=0.20)
+   ↳ Harm 1: 1405.36Hz (+0.0¢)
+   ↳ Harm 2: 2808.21Hz (-1.5¢)
+   ↔ Diff vs YIN: -59.6¢
+🎹 Received note 90, 134656 bytes
+🔍 Guess FFT: f0=36.65Hz (dev=-6402.7¢, conf=0.75)
+   ↔ Diff vs YIN: -6416.4¢
+🔍 Guess Pattern: f0=1488.57Hz (conf=0.20)
+   ↳ Harm 1: 1488.57Hz (+0.0¢)
+   ↳ Harm 2: 2977.14Hz (+0.0¢)
+   ↔ Diff vs YIN: -3.8¢
+🎹 Received note 91, 134656 bytes
+🔍 Guess FFT: f0=37.38Hz (dev=-6468.6¢, conf=0.88)
+   ↔ Diff vs YIN: -6562.2¢
+🔍 Guess Pattern: f0=1578.04Hz (conf=0.20)
+   ↳ Harm 1: 1578.04Hz (+0.0¢)
+   ↳ Harm 2: 3156.79Hz (+0.4¢)
+   ↔ Diff vs YIN: -82.6¢
+🎹 Received note 92, 134656 bytes
+🔍 Guess FFT: f0=43.66Hz (dev=-6299.7¢, conf=0.88)
+   ↔ Diff vs YIN: -6354.2¢
+🔍 Guess Pattern: f0=1672.68Hz (conf=0.20)
+   ↳ Harm 1: 1672.68Hz (+0.0¢)
+   ↳ Harm 2: 3344.82Hz (-0.3¢)
+   ↔ Diff vs YIN: -42.5¢
+🎹 Received note 93, 134656 bytes
+🔍 Guess FFT: f0=43.84Hz (dev=-6392.6¢, conf=0.75)
+   ↔ Diff vs YIN: -6475.3¢
+🔍 Guess Pattern: f0=1774.28Hz (conf=0.20)
+   ↳ Harm 1: 1774.28Hz (+0.0¢)
+   ↳ Harm 2: 3547.83Hz (-0.4¢)
+   ↔ Diff vs YIN: -68.8¢
+🎹 Received note 94, 134656 bytes
+🔍 Guess FFT: f0=53.85Hz (dev=-6136.7¢, conf=1.00)
+   ↔ Diff vs YIN: -6187.3¢
+🔍 Guess Pattern: f0=1879.09Hz (conf=0.20)
+   ↳ Harm 1: 1879.09Hz (+0.0¢)
+   ↳ Harm 2: 3757.45Hz (-0.3¢)
+   ↔ Diff vs YIN: -37.3¢
+🎹 Received note 95, 134656 bytes
+🔍 Guess FFT: f0=43.69Hz (dev=-6598.5¢, conf=0.88)
+   ↔ Diff vs YIN: -6615.9¢
+🔍 Guess Pattern: f0=1993.93Hz (conf=0.20)
+   ↳ Harm 1: 1993.93Hz (+0.0¢)
+   ↳ Harm 2: 3989.11Hz (+0.5¢)
+   ↔ Diff vs YIN: -1.3¢
+🎹 Received note 96, 135168 bytes
+🔍 Guess FFT: f0=71.25Hz (dev=-5851.8¢, conf=1.00)
+   ↔ Diff vs YIN: -5923.8¢
+🔍 Guess Pattern: f0=2109.46Hz (conf=0.20)
+   ↳ Harm 1: 2109.46Hz (+0.0¢)
+   ↳ Harm 2: 4220.71Hz (+0.7¢)
+   ↔ Diff vs YIN: -58.4¢
+🎹 Received note 97, 134656 bytes
+🔍 Guess FFT: f0=30.48Hz (dev=-7422.1¢, conf=0.75)
+   ↔ Diff vs YIN: -7474.6¢
+🔍 Guess Pattern: f0=2240.89Hz (conf=0.20)
+   ↳ Harm 1: 2240.89Hz (+0.0¢)
+   ↳ Harm 2: 4481.07Hz (-0.3¢)
+   ↔ Diff vs YIN: -34.3¢
+🎹 Received note 98, 135168 bytes
+🔍 Guess FFT: f0=46.63Hz (dev=-6785.7¢, conf=0.88)
+   ↔ Diff vs YIN: -6810.9¢
+🔍 Guess Pattern: f0=2371.17Hz (conf=0.10)
+   ↳ Harm 1: 2371.17Hz (+0.0¢)
+   ↔ Diff vs YIN: -9.2¢
+🎹 Received note 99, 134144 bytes
+🔍 Guess FFT: f0=21.83Hz (dev=-8199.9¢, conf=0.62)
+   ↔ Diff vs YIN: -8223.3¢
+🔍 Guess Pattern: f0=2517.72Hz (conf=0.10)
+   ↳ Harm 1: 2517.72Hz (+0.0¢)
+   ↔ Diff vs YIN: -3.6¢
+🎹 Received note 100, 135168 bytes
+🔍 Guess FFT: f0=30.36Hz (dev=-7728.9¢, conf=0.75)
+   ↔ Diff vs YIN: -7754.1¢
+🔍 Guess Pattern: f0=2667.86Hz (conf=0.10)
+   ↳ Harm 1: 2667.86Hz (+0.0¢)
+   ↔ Diff vs YIN: -5.1¢
+🎹 Received note 101, 134144 bytes
+🔍 Guess FFT: f0=40.38Hz (dev=-7335.0¢, conf=0.88)
+   ↔ Diff vs YIN: -7361.2¢
+🔍 Guess Pattern: f0=2832.47Hz (conf=0.10)
+   ↳ Harm 1: 2832.47Hz (+0.0¢)
+   ↔ Diff vs YIN: -2.4¢
+🎹 Received note 102, 134656 bytes
+🔍 Guess FFT: f0=59.38Hz (dev=-6767.5¢, conf=1.00)
+   ↔ Diff vs YIN: -6902.5¢
+🔍 Guess Pattern: f0=3004.82Hz (conf=0.10)
+   ↳ Harm 1: 3004.82Hz (+0.0¢)
+   ↔ Diff vs YIN: -109.0¢
+🎹 Received note 103, 134656 bytes
+🔍 Guess FFT: f0=52.29Hz (dev=-7087.5¢, conf=1.00)
+   ↔ Diff vs YIN: -7119.5¢
+🔍 Guess Pattern: f0=3194.47Hz (conf=0.10)
+   ↳ Harm 1: 3194.47Hz (+0.0¢)
+   ↔ Diff vs YIN: -0.0¢
+🎹 Received note 104, 135168 bytes
+🔍 Guess FFT: f0=180.65Hz (dev=-5041.2¢, conf=1.00)
+   ↔ Diff vs YIN: -5095.6¢
+🔍 Guess Pattern: f0=3372.84Hz (conf=0.10)
+   ↳ Harm 1: 3372.84Hz (+0.0¢)
+   ↔ Diff vs YIN: -28.4¢
+🎹 Received note 105, 134656 bytes
