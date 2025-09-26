@@ -1,6 +1,6 @@
 from typing import List
 import numpy as np
-from app.models.schemas import NoteCaptureMeta, NoteAnalysisResult
+from pytune_dsp.types.dataclasses import NoteCaptureMeta, NoteAnalysisResult
 
 # Fake analyzer pour le moment
 def analyze_expected_note(meta: NoteCaptureMeta, audio_bytes: bytes) -> NoteAnalysisResult:

@@ -5,9 +5,8 @@ import time
 import numpy as np
 import librosa
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
+from pytune_dsp.types.schemas import NoteAnalysisResult, NoteCaptureMeta
 from app.core.diagnosis_pipeline import analyze_note
-from app.models.schemas import NoteCaptureMeta
 from pytune_dsp.utils.note_utils import midi_to_freq
 
 router = APIRouter(prefix="/diag")
