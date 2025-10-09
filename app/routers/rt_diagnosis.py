@@ -5,11 +5,12 @@ import time
 import numpy as np
 import librosa
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from pytune_dsp.types.schemas import NoteAnalysisResult, NoteCaptureMeta
+from pytune_dsp.types.schemas import NoteAnalysisResult
 from app.core.diagnosis_pipeline import analyze_note
 from pytune_dsp.utils.note_utils import midi_to_freq
 
 router = APIRouter(prefix="/diag")
+
 
 @router.websocket("/ws")
 async def ws_diagnosis(ws: WebSocket):
@@ -20,7 +21,7 @@ async def ws_diagnosis(ws: WebSocket):
         while True:
             msg = await ws.receive()
 
-            # ────────────── PING / PONG ──────────────
+            # --- PING/PONG ---
             if msg["type"] == "websocket.receive" and "text" in msg:
                 text = msg["text"]
                 if text == "ping":
@@ -30,64 +31,87 @@ async def ws_diagnosis(ws: WebSocket):
                     await ws.send_text(f"latency:{latency:.2f}ms")
                     continue
 
-            # ────────────── ANALYSE AUDIO ──────────────
+            # --- AUDIO ---
             if msg["type"] == "websocket.receive" and "bytes" in msg:
                 data = msg["bytes"]
 
-                # 1) Lire header JSON
+                # 1) Extraire header + audio
                 meta_len = struct.unpack("I", data[:4])[0]
                 meta_bytes = data[4:4 + meta_len]
                 audio_bytes = data[4 + meta_len:]
 
                 meta_dict = json.loads(meta_bytes.decode("utf-8"))
-                meta = NoteCaptureMeta(**meta_dict)
+                note_expected = meta_dict["note_expected"]
+                streams_meta = meta_dict.get("streams")
+                expected_freq = midi_to_freq(note_expected)
 
-                print(f"🎹 Received note {meta.note_expected}, {len(audio_bytes)} bytes")
+                signals = []
+                if streams_meta:
+                    offset = 0
+                    for s_meta in streams_meta:
+                        sr = s_meta.get("sample_rate", 48000)
+                        length = s_meta["length"]
+                        raw = audio_bytes[offset: offset + length * 4]
+                        offset += length * 4
+                        sig = np.frombuffer(raw, dtype=np.float32)
+                        signals.append((sr, sig, s_meta))
+                else:
+                    sr = meta_dict.get("sample_rate", 48000)
+                    sig = np.frombuffer(audio_bytes, dtype=np.float32)
+                    signals.append((sr, sig, {"stream": 0}))
 
-                # 2) Essayer décodage direct PCM
-                signal = None
-                sr = meta.sample_rate
-                try:
-                    signal = np.frombuffer(audio_bytes, dtype=np.float32)
+                if not signals:
+                    await ws.send_text(json.dumps({
+                        "type": "error",
+                        "error": "No valid signals"
+                    }))
+                    continue
 
-                    # Gestion des canaux
-                    if meta.channels == 2:
-                        signal = signal.reshape(-1, 2).T  # (2, N)
-                    elif meta.channels == 1:
-                        pass
-                    else:
-                        print(f"⚠️ Channels non supportés: {meta.channels}")
-
-                except Exception as e:
-                    print(f"⚠️ PCM decode failed, trying librosa... ({e})")
+                # 2) Analyse de chaque flux
+                results = []
+                for i, (sr, sig, meta) in enumerate(signals):
+                    dur = len(sig) / sr
                     try:
-                        audio_buf = io.BytesIO(audio_bytes)
-                        signal, _ = librosa.load(audio_buf, sr=sr, mono=False)
-                    except Exception as e2:
-                        print(f"❌ Impossible de décoder l’audio: {e2}")
+                        res: NoteAnalysisResult = analyze_note(
+                            str(note_expected),
+                            expected_freq,
+                            sig,
+                            sr,
+                            compute_inharm=meta_dict.get("compute_inharm", False),
+                        )
+                        results.append({
+                            "stream_index": i,
+                            "duration_s": dur,
+                            "samples": len(sig),
+                            "sample_rate": sr,
+                            "analysis": res.model_dump()
+                        })
+                    except Exception as e:
+                        results.append({
+                            "stream_index": i,
+                            "error": str(e)
+                        })
+
+                # 3) Choisir le meilleur résultat (confidence la plus haute)
+                best = None
+                best_score = -1
+                for r in results:
+                    a = r.get("analysis")
+                    if not a:
                         continue
+                    g = a.get("guessed_note")
+                    conf = g.get("confidence", 0) if g else 0
+                    if conf > best_score:
+                        best_score = conf
+                        best = a
 
-                # Si stéréo → mixer en mono
-                if signal.ndim > 1:
-                    signal = np.mean(signal, axis=0)
-
-                # 3) Analyse via pipeline
-                expected_freq = midi_to_freq(meta.note_expected)
-                result = analyze_note(
-                    str(meta.note_expected),
-                    expected_freq,
-                    signal,
-                    sr,
-                    compute_inharm=meta.compute_inharm
-                )
-
-                # 4) Réponse enrichie → alignée au frontend
-                result_dict = result.model_dump()
+                # 4) Construire la réponse
                 payload = {
                     "type": "analysis",
-                    "midi": meta.note_expected,           # 👈 au lieu de "note"
-                    "noteName": result_dict.pop("note_name", None),  # 👈 rename
-                    **result_dict,
+                    "midi": note_expected,
+                    "noteName": best.get("note_name") if best else None,
+                    **(best or {}),
+                    "streams_debug": results  # ⚠️ désactiver en prod
                 }
 
                 await ws.send_text(json.dumps(payload))
