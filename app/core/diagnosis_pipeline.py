@@ -1,7 +1,8 @@
-# pytune_dsp/analysis/analyze.py
+# pytune_diagnosis/app/core/diagnosis_pipeline.py
 import numpy as np
 from pathlib import Path
 import csv
+import time
 from dataclasses import asdict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -12,6 +13,7 @@ from pytune_dsp.analysis.spectrum import harmonic_spectrum_fft
 from pytune_dsp.analysis.response import compute_response
 from pytune_dsp.preprocessing.trim import trim_signal
 from pytune_dsp.utils.note_utils import freq_to_midi, freq_to_note
+from pytune_dsp.utils.serialize import safe_asdict
 
 # v1 (librosa)
 from pytune_dsp.analysis.guess_note import guess_note
@@ -34,6 +36,7 @@ def dump_guesses_to_csv(note_name: str, guesses: dict):
             else:
                 row.append(f"{k}:none")
         writer.writerow(row)
+
 
 def cents_between(f1: float, f2: float) -> float:
     return 1200.0 * np.log2(max(f1, 1e-12) / max(f2, 1e-12))
@@ -69,12 +72,27 @@ def analyze_note(
     print(f"🎹 Expected {note_name} (MIDI {midi_expected}, {expected_freq:.2f} Hz)")
 
     # ─────────────── STEP 1 : f₀ (deux méthodes en //) ───────────────
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        fut_lib = ex.submit(guess_note, signal, sr, True)
-        fut_ess = ex.submit(guess_note_essentia, signal, sr, True)
-        guess_lib = fut_lib.result()
-        guess_ess = fut_ess.result()
+    def timed(func, *args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs)
+        dur_ms = (time.perf_counter() - start) * 1000.0
+        return res, dur_ms
 
+    start_parallel = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fut_lib = ex.submit(timed, guess_note, signal, sr, True)
+        fut_ess = ex.submit(timed, guess_note_essentia, signal, sr, True)
+        (guess_lib, time_lib) = fut_lib.result()
+        (guess_ess, time_ess) = fut_ess.result()
+    total_time = (time.perf_counter() - start_parallel) * 1000.0
+
+    print(f"⏱️ guess_note (librosa): {time_lib:.1f} ms")
+    print(f"⏱️ guess_note_essentia: {time_ess:.1f} ms")
+    print(f"⚙️ Temps effectif total (parallèle): {total_time:.1f} ms")
+    if total_time > 0:
+        print(f"💡 Gain ≈ {(time_lib + time_ess) / total_time:.2f}× plus rapide qu’en séquentiel")
+
+    # Regroupement
     guesses = {"librosa": guess_lib, "essentia": guess_ess}
     if debug_csv:
         dump_guesses_to_csv(note_name, guesses)
@@ -95,7 +113,6 @@ def analyze_note(
     best_guess: GuessNoteResult
     if (guess_lib and guess_lib.f0) and (guess_ess and guess_ess.f0):
         delta = abs(cents_between(guess_lib.f0, guess_ess.f0))
-        # consensus fort → moyenne + boost de confiance
         if delta <= 15.0:
             f_mean = 0.5 * (guess_lib.f0 + guess_ess.f0)
             conf = min(1.0, max(guess_lib.confidence, guess_ess.confidence) + 0.15)
@@ -105,11 +122,13 @@ def analyze_note(
                 confidence=conf,
                 method=f"{guess_lib.method}+{guess_ess.method}",
                 debug_log=(guess_lib.debug_log or []) + (guess_ess.debug_log or []),
-                subresults={"librosa": asdict(guess_lib), "essentia": asdict(guess_ess)},
+                subresults={
+                    "librosa": safe_asdict(guess_lib),
+                    "essentia": safe_asdict(guess_ess),
+                },
                 envelope_band=guess_ess.envelope_band or guess_lib.envelope_band,
             )
         else:
-            # sinon on prend la meilleure confiance (petit biais : en mid/high, préférer Essentia si confs proches)
             prefer_ess = (guess_ess.confidence + 0.05) >= guess_lib.confidence
             best_guess = guess_ess if prefer_ess else guess_lib
     else:
@@ -118,7 +137,6 @@ def analyze_note(
     f0_est = best_guess.f0
     deviation_cents = 1200 * np.log2(f0_est / expected_freq) if expected_freq > 0 else None
 
-    # stabilité minimale
     valid = (
         f0_est > 20.0
         and best_guess.confidence >= 0.30
@@ -154,7 +172,6 @@ def analyze_note(
         response_data = compute_response(signal, sr, f0_est)
 
     # ─────────────── RETURN ───────────────
-    # on expose aussi les deux guesses pour inspection
     guesses["chosen"] = best_guess
     return NoteAnalysisResult(
         midi=int(round(midi_expected)),
@@ -172,7 +189,7 @@ def analyze_note(
         spectral_fingerprint=fingerprint,
         harmonic_spectrum_raw=raw_fp,
         harmonic_spectrum_norm=norm_fp,
-        guessed_note=asdict(best_guess),
-        guesses={k: asdict(v) for k, v in guesses.items() if v},
+        guessed_note=safe_asdict(best_guess),
+        guesses={k: safe_asdict(v) for k, v in guesses.items() if v},
         response=response_data,
     )
