@@ -1,3 +1,4 @@
+# app/routers/diagnosis_router.py
 import io
 import json
 import struct
@@ -5,9 +6,11 @@ import time
 import numpy as np
 import librosa
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 from pytune_dsp.types.schemas import NoteAnalysisResult
-from app.core.diagnosis_pipeline import analyze_note
 from pytune_dsp.utils.note_utils import midi_to_freq
+from pytune_dsp.utils.pianos import infer_era_from_year
+from app.core.diagnosis_pipeline import analyze_note
 
 router = APIRouter(prefix="/diag")
 
@@ -35,83 +38,105 @@ async def ws_diagnosis(ws: WebSocket):
             if msg["type"] == "websocket.receive" and "bytes" in msg:
                 data = msg["bytes"]
 
-                # 1) Extraire header + audio
+                # 1️⃣ Extraire header JSON + données audio
                 meta_len = struct.unpack("I", data[:4])[0]
                 meta_bytes = data[4:4 + meta_len]
                 audio_bytes = data[4 + meta_len:]
 
-                meta_dict = json.loads(meta_bytes.decode("utf-8"))
-                note_expected = meta_dict["note_expected"]
-                streams_meta = meta_dict.get("streams")
+                meta = json.loads(meta_bytes.decode("utf-8"))
+                note_expected = meta["note_expected"]
                 expected_freq = midi_to_freq(note_expected)
 
+                # --- Infos piano transmises ---
+                piano_meta = meta.get("piano", {}) or {}
+                piano_id = piano_meta.get("id")
+                piano_type = (piano_meta.get("type") or "upright").lower()
+                piano_era = (piano_meta.get("era") or "").lower()
+
+                if not piano_era and piano_meta.get("year"):
+                    piano_era = infer_era_from_year(piano_meta["year"])
+
+                if piano_type not in ("upright", "grand"):
+                    piano_type = "upright"
+                if piano_era not in ("antique", "vintage", "modern"):
+                    piano_era = "modern"
+
+                streams_meta = meta.get("streams")
+
+                # --- Extraction des signaux audio ---
                 signals = []
                 if streams_meta:
                     offset = 0
                     for s_meta in streams_meta:
-                        sr = s_meta.get("sample_rate", 48000)
+                        sr = s_meta.get("sample_rate", meta.get("sample_rate", 48000))
                         length = s_meta["length"]
                         raw = audio_bytes[offset: offset + length * 4]
                         offset += length * 4
                         sig = np.frombuffer(raw, dtype=np.float32)
                         signals.append((sr, sig, s_meta))
                 else:
-                    sr = meta_dict.get("sample_rate", 48000)
+                    sr = meta.get("sample_rate", 48000)
                     sig = np.frombuffer(audio_bytes, dtype=np.float32)
                     signals.append((sr, sig, {"stream": 0}))
 
                 if not signals:
                     await ws.send_text(json.dumps({
                         "type": "error",
-                        "error": "No valid signals"
+                        "error": "No valid audio streams"
                     }))
                     continue
 
-                # 2) Analyse de chaque flux
+                # 2️⃣ Analyse de chaque flux
                 results = []
-                for i, (sr, sig, meta) in enumerate(signals):
+                for i, (sr, sig, meta_stream) in enumerate(signals):
                     dur = len(sig) / sr
                     try:
                         res: NoteAnalysisResult = analyze_note(
-                            str(note_expected),
-                            expected_freq,
-                            sig,
-                            sr,
-                            compute_inharm=meta_dict.get("compute_inharm", False),
+                            note_name=str(note_expected),
+                            expected_freq=expected_freq,
+                            signal=sig,
+                            sr=sr,
+                            compute_inharm=meta.get("compute_inharm", False),
+                            piano_type=piano_type,
+                            era=piano_era,
                         )
                         results.append({
                             "stream_index": i,
                             "duration_s": dur,
                             "samples": len(sig),
                             "sample_rate": sr,
-                            "analysis": res.model_dump()
+                            "analysis": res.model_dump(),
                         })
                     except Exception as e:
                         results.append({
                             "stream_index": i,
-                            "error": str(e)
+                            "error": str(e),
                         })
 
-                # 3) Choisir le meilleur résultat (confidence la plus haute)
-                best = None
-                best_score = -1
+                # 3️⃣ Sélection du meilleur flux (confiance max)
+                best, best_score = None, -1.0
                 for r in results:
                     a = r.get("analysis")
                     if not a:
                         continue
                     g = a.get("guessed_note")
-                    conf = g.get("confidence", 0) if g else 0
+                    conf = g.get("confidence", 0.0) if g else 0.0
                     if conf > best_score:
                         best_score = conf
                         best = a
 
-                # 4) Construire la réponse
+                # 4️⃣ Construction du payload de réponse
                 payload = {
                     "type": "analysis",
                     "midi": note_expected,
                     "noteName": best.get("note_name") if best else None,
                     **(best or {}),
-                    "streams_debug": results  # ⚠️ désactiver en prod
+                    "piano": {
+                        "id": piano_id,
+                        "type": piano_type,
+                        "era": piano_era,
+                    },
+                    "streams_debug": results,  # ⚠️ retirer en production
                 }
 
                 await ws.send_text(json.dumps(payload))
