@@ -14,6 +14,22 @@ from app.core.diagnosis_pipeline import analyze_note
 
 router = APIRouter(prefix="/diag")
 
+import numpy as np
+import json
+
+def safe_json_default(obj):
+    """Convertit proprement les objets non sérialisables en JSON."""
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, (np.float32, np.float64)):
+        return float(obj)
+    if isinstance(obj, (np.int32, np.int64)):
+        return int(obj)
+    if isinstance(obj, set):
+        return list(obj)
+    if isinstance(obj, complex):
+        return [obj.real, obj.imag]
+    return str(obj)
 
 @router.websocket("/ws")
 async def ws_diagnosis(ws: WebSocket):
@@ -139,12 +155,12 @@ async def ws_diagnosis(ws: WebSocket):
                     "streams_debug": results,  # ⚠️ retirer en production
                 }
 
-                await ws.send_text(json.dumps(payload))
+                await ws.send_text(json.dumps(payload, default=safe_json_default))
                 continue
 
             if msg["type"] == "websocket.disconnect":
                 print("❌ Client disconnected from /diag/ws")
                 break
 
-    except WebSocketDisconnect:
-        print("❌ Client disconnected from /diag/ws")
+    except WebSocketDisconnect as e:
+        print(f"❌ Client disconnected from /diag/ws -exception: {e}")

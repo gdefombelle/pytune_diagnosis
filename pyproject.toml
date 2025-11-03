@@ -47,6 +47,8 @@ pytune-dsp = { path = "../../packages/pytune_dsp", develop = true }
 # pytune-configuration = "^2.0.3"
 # pytune-data = "^x.y.z"
 # pytune-auth-common = "^x.y.z"
+matplotlib = "^3.10.7"
+numba = "^0.62.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"
