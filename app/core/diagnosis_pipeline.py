@@ -6,7 +6,7 @@ from pytune_dsp.analysis.partials import compute_partials_fft_peaks
 from pytune_dsp.analysis.inharmonicity import compute_inharmonicity_avg, estimate_B
 from pytune_dsp.analysis.spectrum import harmonic_spectrum_fft
 from pytune_dsp.analysis.response import compute_response
-from pytune_dsp.utils.note_utils import freq_to_midi
+from pytune_dsp.utils.note_utils import freq_to_midi, freq_to_note
 from pytune_dsp.utils.serialize import safe_asdict
 from pytune_dsp.analysis.pitch_detection_librosa import guess_note_librosa
 from pytune_dsp.analysis.pitch_detection_essentia import guess_note_essentia
@@ -74,6 +74,15 @@ def analyze_note(
         (guess_ess, t_ess) = fut_ess.result()
         (res_hps,  t_hps) = fut_hps.result()
         (res_hpsm, t_hpsm) = fut_hpsm.result()
+    
+    # juste après les fut_*.result()
+    if isinstance(res_hps, dict) and res_hps.get("f0", 0) > 0:
+        print(gray(f"[HPS-wrapper] → {res_hps['f0']:.2f} Hz (q={res_hps.get('quality',0):.2f})"
+                f" B={res_hps.get('B',0):.3f}"))
+
+    if isinstance(res_hpsm, dict) and res_hpsm.get("best"):
+        hb = res_hpsm["best"]
+        print(gray(f"[HPS-multi] best → {hb['f0']:.2f} Hz (q={hb.get('quality',0):.2f})"))
 
     t_total = (time.perf_counter() - start_all) * 1000.0
     print(cyan(f"⏱  timings → librosa={t_lib:.1f} ms | essentia={t_ess:.1f} ms | "
@@ -87,16 +96,57 @@ def analyze_note(
             self.method = str(method)
 
     proposals = {}
-    if hasattr(guess_lib, "f0") and guess_lib.f0 > 0:
-        proposals["librosa"] = Guess(guess_lib.f0, getattr(guess_lib, "confidence", 0.0), "librosa")
-    if hasattr(guess_ess, "f0") and guess_ess.f0 > 0:
-        proposals["essentia"] = Guess(guess_ess.f0, getattr(guess_ess, "confidence", 0.0), "essentia")
-    if isinstance(res_hps, dict) and res_hps.get("f0", 0) > 0:
-        proposals["hps"] = Guess(res_hps["f0"], res_hps.get("quality", 0.0), "hps")
 
+    # --- Librosa ---
+    if hasattr(guess_lib, "f0") and guess_lib.f0 > 0:
+        proposals["librosa"] = Guess(
+            guess_lib.f0, getattr(guess_lib, "confidence", 0.0), "librosa"
+        )
+
+    # --- Essentia ---
+    if hasattr(guess_ess, "f0") and guess_ess.f0 > 0:
+        proposals["essentia"] = Guess(
+            guess_ess.f0, getattr(guess_ess, "confidence", 0.0), "essentia"
+        )
+
+    # --- HPS (wrapper rapide) ---
+    if isinstance(res_hps, dict) and res_hps.get("f0", 0) > 0:
+        proposals["hps"] = Guess(
+            res_hps["f0"], res_hps.get("quality", 0.0), "hps"
+        )
+
+    # --- HPS-multi (validation inter-octave / précision) ---
+    if isinstance(res_hpsm, dict) and res_hpsm.get("best"):
+        hb = res_hpsm["best"]
+        if hb.get("f0", 0) > 0:
+            proposals["hps_multi"] = Guess(
+                hb["f0"], hb.get("quality", 0.0), "hps_multi"
+            )
+            print(gray(
+                f"[HPS-multi used] best → {hb['f0']:.2f} Hz (q={hb.get('quality', 0):.2f})"
+            ))
+
+    # --- Vérification globale ---
     if not proposals:
         print(red("⚠ Aucun moteur n’a produit de f₀ valide."))
-        return NoteAnalysisResult(note_name=note_name, valid=False, f0=None, confidence=0.0, expected_freq=expected_freq)
+        return NoteAnalysisResult(
+            note_name=note_name,
+            valid=False,
+            f0=None,
+            confidence=0.0,
+            expected_freq=expected_freq
+        )
+    # -- nudge anti-octave piloté par HPS (si dispo)
+    if "hps" in proposals:
+        hps_f0 = proposals["hps"].f0
+        for g in proposals.values():
+            r = abs(np.log2(g.f0 / hps_f0))
+            # si le candidat est ~à ±1 octave du HPS (r≈1.0) → petite pénalité
+            if 0.45 < r < 0.55:
+                g.confidence *= 0.85
+            # si le candidat est proche du HPS (±36 cents) → petit bonus
+            if r < 0.03:
+                g.confidence *= 1.05
 
     best = max(proposals.values(), key=lambda g: g.confidence)
     f0_est = best.f0
@@ -166,6 +216,8 @@ def analyze_note(
         "method": best.method,
         "envelope_band": getattr(guess_ess, "envelope_band", "unknown"),
         "subresults": sub_all,
+        "midi": int(round(freq_to_midi(f0_est))),
+        "note_name": freq_to_note(f0_est),  # à créer juste après
     }
 
     guesses = {
