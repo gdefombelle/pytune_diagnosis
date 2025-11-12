@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -52,6 +53,13 @@ def analyze_note(
     debug_csv: bool = False,
     piano_type: str = "upright",
     era: str = "modern",
+    use_essentia: bool = False,   # ✅ nouveau paramètre (facultatif)
+    use_librosa: bool = False,    # ✅ nouveau paramètre (facultatif)
+    # ── contexte (neutre par défaut) ───────────────────────────
+    context_expected_weight: float = 0.0,     # 0 = off
+    context_recent_weight: float = 0.0,       # 0 = off
+    recent_notes_hz: list[float] | None = None,  # dernières f0 jouées (Hz)
+    context_cents_sigma: float = 50.0,        # portée de l’effet (≈ 50 cents)
 ) -> NoteAnalysisResult:
 
     midi_expected = freq_to_midi(expected_freq)
@@ -64,29 +72,55 @@ def analyze_note(
         return res, (time.perf_counter() - start) * 1000.0
 
     start_all = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=4) as ex:
-        fut_lib = ex.submit(timed, guess_note_librosa, signal, sr, True)
-        fut_ess = ex.submit(timed, guess_note_essentia, signal, sr, True)
+
+    # ✅ nombre de workers selon les switches
+    n_workers = 2 + int(use_librosa) + int(use_essentia)
+    with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        fut_lib, fut_ess = None, None
+
+        # --- Librosa (facultatif) ---
+        if use_librosa:
+            fut_lib = ex.submit(timed, guess_note_librosa, signal, sr, True)
+
+        # --- HPS & HPS-multi toujours actifs ---
         fut_hps = ex.submit(timed, estimate_f0_hps_wrapper, signal, sr, "auto")
         fut_hpsm = ex.submit(timed, estimate_f0_hps_multi_wrapper, signal, sr)
 
-        (guess_lib, t_lib) = fut_lib.result()
-        (guess_ess, t_ess) = fut_ess.result()
-        (res_hps,  t_hps) = fut_hps.result()
+        # --- Essentia (facultatif) ---
+        if use_essentia:
+            fut_ess = ex.submit(timed, guess_note_essentia, signal, sr, True)
+
+        # --- Résultats ---
+        guess_lib, t_lib = (None, 0.0)
+        guess_ess, t_ess = (None, 0.0)
+        if use_librosa and fut_lib:
+            (guess_lib, t_lib) = fut_lib.result()
+
+        (res_hps, t_hps) = fut_hps.result()
         (res_hpsm, t_hpsm) = fut_hpsm.result()
-    
-    # juste après les fut_*.result()
-    if isinstance(res_hps, dict) and res_hps.get("f0", 0) > 0:
-        print(gray(f"[HPS-wrapper] → {res_hps['f0']:.2f} Hz (q={res_hps.get('quality',0):.2f})"
-                f" B={res_hps.get('B',0):.3f}"))
 
-    if isinstance(res_hpsm, dict) and res_hpsm.get("best"):
-        hb = res_hpsm["best"]
-        print(gray(f"[HPS-multi] best → {hb['f0']:.2f} Hz (q={hb.get('quality',0):.2f})"))
+        if use_essentia and fut_ess:
+            (guess_ess, t_ess) = fut_ess.result()
 
-    t_total = (time.perf_counter() - start_all) * 1000.0
-    print(cyan(f"⏱  timings → librosa={t_lib:.1f} ms | essentia={t_ess:.1f} ms | "
-               f"HPS={t_hps:.1f} ms | multi={t_hpsm:.1f} ms  → total={t_total:.1f} ms"))
+        t_total = (time.perf_counter() - start_all) * 1000.0
+
+    # --- Normaliser la sortie HPS-multi (accepte "best" OU "candidates[0]")
+    hpsm_best = None
+    if isinstance(res_hpsm, dict):
+        if res_hpsm.get("best"):
+            hpsm_best = res_hpsm["best"]
+        else:
+            cands = res_hpsm.get("candidates")
+            if isinstance(cands, list) and cands:
+                hpsm_best = cands[0]
+
+    # Affichage timings
+    print(cyan(
+        "⏱ timings → "
+        + (f"librosa={t_lib:.1f} ms | " if use_librosa else "")
+        + (f"essentia={t_ess:.1f} ms | " if use_essentia else "")
+        + f"HPS={t_hps:.1f} ms | multi={t_hpsm:.1f} ms | total={t_total:.1f} ms"
+    ))
 
     # ───── Normalize guesses ─────
     class Guess:
@@ -94,39 +128,50 @@ def analyze_note(
             self.f0 = float(f0)
             self.confidence = float(conf)
             self.method = str(method)
+    def _cents_delta(f_hz: float, ref_hz: float) -> float:
+        if f_hz <= 0 or ref_hz <= 0:
+            return 1e9
+        return 1200.0 * math.log2(f_hz / ref_hz)
+
+    def _gauss(x: float, sigma: float) -> float:
+        # pic = 1 à x=0, décroît en gaussienne ; borné ∈ (0,1]
+        if sigma <= 0:
+            return 1.0
+        return math.exp(-0.5 * (x / sigma) ** 2)
 
     proposals = {}
 
-    # --- Librosa ---
-    if hasattr(guess_lib, "f0") and guess_lib.f0 > 0:
+    # --- Librosa (facultatif) ---
+    if use_librosa and hasattr(guess_lib, "f0") and guess_lib.f0 > 0:
         proposals["librosa"] = Guess(
             guess_lib.f0, getattr(guess_lib, "confidence", 0.0), "librosa"
         )
 
-    # --- Essentia ---
-    if hasattr(guess_ess, "f0") and guess_ess.f0 > 0:
+    # --- Essentia (facultatif) ---
+    if use_essentia and hasattr(guess_ess, "f0") and guess_ess.f0 > 0:
         proposals["essentia"] = Guess(
             guess_ess.f0, getattr(guess_ess, "confidence", 0.0), "essentia"
         )
 
-    # --- HPS (wrapper rapide) ---
+    # --- HPS (wrapper "single") ---
     if isinstance(res_hps, dict) and res_hps.get("f0", 0) > 0:
         proposals["hps"] = Guess(
             res_hps["f0"], res_hps.get("quality", 0.0), "hps"
         )
 
-    # --- HPS-multi (validation inter-octave / précision) ---
-    if isinstance(res_hpsm, dict) and res_hpsm.get("best"):
-        hb = res_hpsm["best"]
-        if hb.get("f0", 0) > 0:
-            proposals["hps_multi"] = Guess(
-                hb["f0"], hb.get("quality", 0.0), "hps_multi"
-            )
-            print(gray(
-                f"[HPS-multi used] best → {hb['f0']:.2f} Hz (q={hb.get('quality', 0):.2f})"
-            ))
+    # --- HPS-multi (best normalisé) ---
+    if hpsm_best and hpsm_best.get("f0", 0) > 0:
+        proposals["hps_multi"] = Guess(
+            hpsm_best["f0"],
+            hpsm_best.get("conf", hpsm_best.get("quality", 0.0)),
+            "hps_multi"
+        )
+        print(gray(
+            f"[HPS-multi used] best → {hpsm_best['f0']:.2f} Hz "
+            f"(q={hpsm_best.get('conf', hpsm_best.get('quality', 0.0)):.2f})"
+        ))
 
-    # --- Vérification globale ---
+    # Vérification
     if not proposals:
         print(red("⚠ Aucun moteur n’a produit de f₀ valide."))
         return NoteAnalysisResult(
@@ -136,22 +181,47 @@ def analyze_note(
             confidence=0.0,
             expected_freq=expected_freq
         )
-    # -- nudge anti-octave piloté par HPS (si dispo)
+
+    recent_ref_hz = None
+    if context_recent_weight > 0.0 and recent_notes_hz:
+        # médiane robuste des dernières notes jouées
+        try:
+            arr = [float(f) for f in recent_notes_hz if f and f > 0]
+            if arr:
+                arr.sort()
+                mid = len(arr) // 2
+                recent_ref_hz = arr[mid] if len(arr) % 2 == 1 else 0.5 * (arr[mid-1] + arr[mid])
+        except Exception:
+            recent_ref_hz = None
+
+    # ───── Anti-octave piloté par HPS ─────
     if "hps" in proposals:
         hps_f0 = proposals["hps"].f0
         for g in proposals.values():
             r = abs(np.log2(g.f0 / hps_f0))
-            # si le candidat est ~à ±1 octave du HPS (r≈1.0) → petite pénalité
-            if 0.45 < r < 0.55:
-                g.confidence *= 0.85
-            # si le candidat est proche du HPS (±36 cents) → petit bonus
-            if r < 0.03:
-                g.confidence *= 1.05
+            if 0.45 < r < 0.55:  # ~1 octave
+                g.confidence *= 0.60  # pénalité plus forte
+            if r < 0.03:  # proche du HPS (±36 cents)
+                g.confidence *= 1.10
 
+    # ───── Contexte optionnel (neutre si poids=0) ─────
+    if context_expected_weight > 0.0 and expected_freq > 0:
+        for g in proposals.values():
+            dc = abs(_cents_delta(g.f0, expected_freq))
+            # facteur ∈ (1, 1+poids], max au voisinage de la note attendue
+            g.confidence *= (1.0 + context_expected_weight * _gauss(dc, context_cents_sigma))
+
+    if context_recent_weight > 0.0 and recent_ref_hz and recent_ref_hz > 0:
+        for g in proposals.values():
+            dc = abs(_cents_delta(g.f0, recent_ref_hz))
+            g.confidence *= (1.0 + context_recent_weight * _gauss(dc, context_cents_sigma))
+
+    # ───── Sélection finale ─────
     best = max(proposals.values(), key=lambda g: g.confidence)
     f0_est = best.f0
     dev_cents = 1200 * np.log2(f0_est / expected_freq)
     valid = (f0_est > 20.0) and (abs(dev_cents) < 100) and (best.confidence >= 0.25)
+
     print(green(f"🌟 selected: {best.method} → {f0_est:.2f} Hz ({best.confidence:.2f})  Δ={dev_cents:.1f} cents"))
 
     # ───── Unison analysis ─────
@@ -205,8 +275,20 @@ def analyze_note(
     sub_lib = extract_subresults(guess_lib)
     sub_ess = extract_subresults(guess_ess)
     sub_hps = extract_subresults(res_hps)
+
+    # HPS-multi subresults (si dispo)
+    sub_hpsm = None
+    if hpsm_best:
+        sub_hpsm = {
+            "hps_multi": {
+                "f0": float(hpsm_best.get("f0", 0.0)),
+                "conf": float(hpsm_best.get("conf", hpsm_best.get("quality", 0.0))),
+                "score": float(hpsm_best.get("score", 0.0)),
+            }
+        }
+
     sub_all = {}
-    for s in (sub_lib, sub_ess, sub_hps):
+    for s in (sub_lib, sub_ess, sub_hps, sub_hpsm):
         if s:
             sub_all.update(s)
 
@@ -217,7 +299,7 @@ def analyze_note(
         "envelope_band": getattr(guess_ess, "envelope_band", "unknown"),
         "subresults": sub_all,
         "midi": int(round(freq_to_midi(f0_est))),
-        "note_name": freq_to_note(f0_est),  # à créer juste après
+        "note_name": freq_to_note(f0_est),
     }
 
     guesses = {
@@ -228,6 +310,9 @@ def analyze_note(
         "hps": {"f0": res_hps.get("f0", 0.0) if isinstance(res_hps, dict) else None,
                 "confidence": res_hps.get("quality", 0.0) if isinstance(res_hps, dict) else None,
                 "method": "HPS", "subresults": sub_hps},
+        "hps_multi": {"f0": hpsm_best.get("f0", 0.0) if hpsm_best else 0.0,
+                      "confidence": hpsm_best.get("conf", hpsm_best.get("quality", 0.0)) if hpsm_best else 0.0,
+                      "method": "HPS-multi", "subresults": sub_hpsm},
     }
 
     hps_data = None
@@ -248,6 +333,67 @@ def analyze_note(
     # ───── Final summary ─────
     print(green(f"✅ DONE — f₀={f0_ref:.2f} Hz | conf={best.confidence:.2f} | "
                 f"B={fmt_val(B_final)} | valid={valid}"))
+
+    # ───── Append to CSV log ─────
+    try:
+        from datetime import datetime
+        from app.utils.csv_logger import append_diagnosis_row
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        def fmt(x, digits=4):
+            try:
+                return f"{float(x):.{digits}f}"
+            except Exception:
+                return ""
+
+        def fmt_exp(x):
+            try:
+                return f"{float(x):.3e}"
+            except Exception:
+                return ""
+
+        # Sélecteur robuste pour HPS-multi (best/candidates)
+        def pick_hpsm_best(d):
+            if not isinstance(d, dict):
+                return {}
+            if d.get("best"):
+                return d["best"]
+            c = d.get("candidates")
+            return c[0] if isinstance(c, list) and c else {}
+
+        hpsm_csv = pick_hpsm_best(res_hpsm)
+
+        append_diagnosis_row({
+            "timestamp": timestamp,
+            "expected_note": freq_to_note(expected_freq),
+            "expected_freq": fmt(expected_freq),
+            "f0_seed_note": freq_to_note(f0_est),
+
+            "librosa_f0": fmt(getattr(guess_lib, "f0", 0.0)),
+            "librosa_conf": fmt(getattr(guess_lib, "confidence", 0.0)),
+
+            "essentia_f0": fmt(getattr(guess_ess, "f0", 0.0)),
+            "essentia_conf": fmt(getattr(guess_ess, "confidence", 0.0)),
+
+            "hps_f0": fmt(res_hps.get("f0", 0.0) if isinstance(res_hps, dict) else 0.0),
+            "hps_q": fmt(res_hps.get("quality", 0.0) if isinstance(res_hps, dict) else 0.0),
+
+            "hpsm_f0": fmt(hpsm_csv.get("f0", 0.0)),
+            "hpsm_q":  fmt(hpsm_csv.get("conf", hpsm_csv.get("quality", 0.0))),
+
+            "final_f0": fmt(f0_ref),
+            "final_conf": fmt(best.confidence),
+            "delta_cents": fmt(dev_cents),
+            "B": fmt_exp(B_final) if B_final is not None else "",
+            "n_cordes": getattr(unison, "detected_n_components", None),
+            "beat_hz": fmt(getattr(unison, "beat_hz_estimate", 0)),
+            "valid": bool(valid),
+            "t_total_ms": fmt(t_total, 2),
+        })
+        print(gray("🧾 logged to diagnosis_results.csv"))
+    except Exception as e:
+        print(red(f"⚠️  logging error: {e}"))
 
     return NoteAnalysisResult(
         midi=int(round(midi_expected)),
