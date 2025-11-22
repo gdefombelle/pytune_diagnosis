@@ -115,6 +115,12 @@ async def ws_diagnosis(ws: WebSocket):
                             compute_inharm=meta.get("compute_inharm", False),
                             piano_type=piano_type,
                             era=piano_era,
+                            use_essentia=True,          # si on veut garder la voie "informed"
+                            use_librosa=False,          # tu peux laisser False
+                            use_yin_partitioned=True,   # <── ON active le nouveau moteur
+                            yin_partition_mode="cents_250",  # ou "octaves_8", "cents_250"
+                            yin_target_width_oct=1.0,
+                            yin_max_depth=5,
                         )
                         results.append({
                             "stream_index": i,
