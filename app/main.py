@@ -10,6 +10,8 @@ from pathlib import Path
 import os
 
 from .routers.rt_diagnosis import router as rt_diagnosis_router
+from .routers.sessions_diagnosis import router as sessions_diagnosis_router
+
 
 from simple_logger.logger import get_logger, SimpleLogger
 from pytune_configuration.sync_config_singleton import config, SimpleConfig
@@ -96,6 +98,7 @@ else:
 
 # 🔗 Inclure les routers
 app.include_router(rt_diagnosis_router)
+app.include_router(sessions_diagnosis_router)
 
 # 📄 Gestion des erreurs FastAPI
 from fastapi.exceptions import RequestValidationError
