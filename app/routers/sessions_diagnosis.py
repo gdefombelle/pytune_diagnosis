@@ -172,12 +172,20 @@ async def add_note(
         raise HTTPException(404, "Session not found")
 
     note = await DiagnosisNote.create(
-        session=session,
+        session_id=session_id,
         midi=req.midi,
-        f0=req.freq_detected,
+        note_name=req.note_name,
+        f0=req.f0,
         deviation_cents=req.deviation_cents,
         confidence=req.confidence,
-        inharmonicity=req.inharmonicity
+        inharmonicity=req.inharmonicity,
+
+        # 🔥 Ajouter tous les champs optionnels
+        B_estimate=req.B_estimate,
+        partials=req.partials,
+        inharmonicity_curve=req.inharmonicity_curve,
+        spectral_fingerprint=req.spectral_fingerprint,
+        unison=req.unison,
     )
 
     # pass-thru to websocket if needed ???
