@@ -10,6 +10,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pytune_dsp.types.schemas import NoteAnalysisResult
 from pytune_dsp.utils.note_utils import midi_to_freq
 from pytune_dsp.utils.pianos import infer_era_from_year
+from sse_starlette import EventSourceResponse
 from app.core.diagnosis_pipeline import analyze_note
 from app.services.diagnosis_event_bus import publish_event
 from fastapi.responses import StreamingResponse
@@ -183,11 +184,16 @@ async def ws_diagnosis(ws: WebSocket):
 
 
 
-@router.get("/sse")
-async def diagnosis_sse():
-    return StreamingResponse(
-        consume_events(),
-        media_type="text/event-stream"
-    )
+async def sse_event_stream():
+    async for event in consume_events():
+        # event est déjà un dict JSON venant de publish_event
+        yield {
+            "event": event.get("type", "analysis"),
+            "id": str(event.get("event_id", "")),
+            "data": json.dumps(event)
+        }
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+@router.get("/sse", response_class=EventSourceResponse)
+async def diagnosis_sse():
+    return EventSourceResponse(sse_event_stream())
