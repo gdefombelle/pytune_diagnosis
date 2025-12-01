@@ -12,9 +12,9 @@ from pytune_dsp.utils.note_utils import midi_to_freq
 from pytune_dsp.utils.pianos import infer_era_from_year
 from sse_starlette import EventSourceResponse
 from app.core.diagnosis_pipeline import analyze_note
-from app.services.diagnosis_event_bus import publish_event
 from fastapi.responses import StreamingResponse
-from app.services.diagnosis_event_bus import consume_events
+from app.services.sse_publisher import publish_event
+from app.models.models import slim_note_analysis
 
 router = APIRouter(prefix="/diag")
 
@@ -151,28 +151,46 @@ async def ws_diagnosis(ws: WebSocket):
                         best_score = conf
                         best = a
 
-                # 4️⃣ Construction du payload de réponse
+                # 4️⃣ Construction du payload de réponse (SLIM)
+                best_slim = slim_note_analysis(best) if best else None
+                # payload = {
+                #     "type": "analysis",
+                #     "midi": note_expected,
+                #     "noteName": best.get("note_name") if best else None,
+                #     **(best or {}),
+                #     "piano": {
+                #         "id": piano_id,
+                #         "type": piano_type,
+                #         "era": piano_era,
+                #     },
+                #     "streams_debug": results,  # ⚠️ retirer en production
+                # }
+
                 payload = {
                     "type": "analysis",
                     "midi": note_expected,
-                    "noteName": best.get("note_name") if best else None,
-                    **(best or {}),
+                    "noteName": best_slim.get("note_name") if best_slim else None,
+                    **(best_slim or {}),
                     "piano": {
                         "id": piano_id,
                         "type": piano_type,
                         "era": piano_era,
                     },
-                    "streams_debug": results,  # ⚠️ retirer en production
+                    # ⚠️ debug uniquement — à supprimer en prod
+                    # "streams_debug": results,
                 }
 
                 await ws.send_text(json.dumps(payload, default=safe_json_default))
-                # 🔥 Push event to SSE live stream too
-                await publish_event({
+                # 🔥 Push event to SSE live stream too for slave remote clients
+                # 📌 on flatten l’event :
+                event = {
                     "type": "analysis",
-                    "session_id": meta.get("sessionId"),  # si tu as passé ça
+                    "session_id": meta.get("sessionId"),
                     "midi": note_expected,
-                    "payload": payload,
-                })
+                    "payload": payload   # ⬅️ intègre tout dedans
+                }
+                await publish_event(event)
+
                 continue
 
             if msg["type"] == "websocket.disconnect":
@@ -183,17 +201,3 @@ async def ws_diagnosis(ws: WebSocket):
         print(f"❌ Client disconnected from /diag/ws -exception: {e}")
 
 
-
-async def sse_event_stream():
-    async for event in consume_events():
-        # event est déjà un dict JSON venant de publish_event
-        yield {
-            "event": event.get("type", "analysis"),
-            "id": str(event.get("event_id", "")),
-            "data": json.dumps(event)
-        }
-
-
-@router.get("/sse", response_class=EventSourceResponse)
-async def diagnosis_sse():
-    return EventSourceResponse(sse_event_stream())
