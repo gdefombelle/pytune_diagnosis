@@ -1,65 +1,66 @@
 [project]
 name = "pytune_diagnosis"
-version = "0.0.0"
-description = "PyTune diagnosis microservice"
-requires-python = ">=3.12"
-
-[tool.poetry]
-name = "pytune_diagnosis"
 version = "0.0.1"
-description = "pytune diagnosis rt and batch"
-authors = ["Gabriel de Fombelle <gabriel.de.fombelle@gmail.com>"]
-license = "MIT"
-readme = "README.md"
-packages = [{ include = "app" }]   # code dans services/pytune_ai_router/app
+description = "PyTune diagnosis service"
+requires-python = ">=3.12,<3.13"
 
-[tool.poetry.dependencies]
-python = ">=3.12,<4.0"
+dependencies = [
+    # API
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.8.0",
+    "sse-starlette>=2.0.0",
 
-# API stack
-fastapi = "^0.115.0"
-uvicorn = { extras = ["standard"], version = "^0.34.0" }
-pydantic = "^2.8.0"
-essentia = "2.1b6.dev1389"
+    # DSP libs
+    "essentia==2.1b6.dev1389",
 
-# Networking / IO
-httpx = "^0.27.2"
-pyyaml = "^6.0.2"
-aiofiles = "^24.1.0"
-python-multipart = "^0.0.12"
+    # Networking / IO
+    "httpx>=0.27.2",
+    "pyyaml>=6.0.2",
+    "aiofiles>=24.1.0",
+    "python-multipart>=0.0.12",
 
+    # Infra
+    "redis>=5.0.7",
+    "asyncpg>=0.30.0",
+    "tortoise-orm>=0.20.0",
+    "python-dotenv>=1.0.1",
 
-# Infra (si utilisés dans ce service)
-redis = "^5.0.7"
-asyncpg = "^0.30.0"
-tortoise-orm = "^0.20.0"
-python-dotenv = "^1.0.1"
-sse-starlette = "^2.0.0"
+    # PDF
+    "fpdf>=1.7.2",
 
-# PDF util
-fpdf = "^1.7.2"
+    # Scientific stack
+    "matplotlib>=3.10.7",
+    "numba>=0.62.1",
+    "pandas>=2.3.3",
+    "plotly>=6.4.0",
 
-# ---- DEV (monorepo, editable) + PROD----
+    # Internal PyTune packages
+    "pytune_helpers_core",
+    "pytune_helpers_images",
+    "pytune_llm",
+    "pytune_piano_i2i",
+    "pytune_auth_common",
+    "pytune_configuration",
+    "simple_logger",
+    "pytune_data",
+    "pytune_helpers_messaging",
+    "pytune_chat",
+    "pytune_dsp",
+]
 
-pytune_auth_common = { git = "https://github.com/gdefombelle/pytune_auth_common.git" , branch = "main"}
-pytune_configuration = { git = "https://github.com/gdefombelle/pytune_configuration.git", branch = "main"}
-simple_logger = { git = "https://github.com/gdefombelle/simple_logger.git", branch = "main"}
-pytune_data = { git  = "https://github.com/gdefombelle/pytune_data.git", branch = "main"}
-pytune_dsp = {git = "https://github.com/gdefombelle/pytune_dsp.git", branch = "main"}
+[tool.uv]
+package = false  
 
-
-
-matplotlib = "^3.10.7"
-numba = "^0.62.1"
-pandas = "^2.3.3"
-plotly = "^6.4.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.2.0"
-pytest-asyncio = "^0.23.8"
-ruff = "^0.6.8"
-mypy = "^1.11.1"
-
-[build-system]
-requires = ["poetry-core>=1.9.0"]
-build-backend = "poetry.core.masonry.api"
+# [tool.uv.sources]
+# pytune_helpers_core      = { path = "packages/pytune_helpers_core" }
+# pytune_helpers_images    = { path = "packages/pytune_helpers_images" }
+# pytune_llm               = { path = "packages/pytune_llm" }
+# pytune_piano_i2i         = { path = "packages/pytune_piano_i2i" }
+# pytune_auth_common       = { path = "packages/pytune_auth_common" }
+# pytune_configuration     = { path = "packages/pytune_configuration" }
+# simple_logger            = { path = "packages/simple_logger" }
+# pytune_data              = { path = "packages/pytune_data" }
+# pytune_helpers_messaging = { path = "packages/pytune_helpers_messaging" }
+# pytune_chat              = { path = "packages/pytune_chat" }
+# pytune_dsp               = { path = "packages/pytune_dsp" }

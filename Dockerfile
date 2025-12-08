@@ -1,26 +1,46 @@
-# Étape 1 : Image de base
-FROM python:3.12.3-slim
+# ===============================
+# Étape 1 : Build avec UV
+# ===============================
+FROM --platform=linux/amd64 python:3.12-slim AS builder
 
-# Étape 2 : Dossier de travail
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install uv
+
 WORKDIR /app
 
-# Étape 3 : Dépendances système nécessaires (PostgreSQL client, etc.)
-RUN apt-get update && apt-get install -y libpq-dev gcc && apt-get clean
+# Copier le workspace root (pyproject + lock)
+COPY pyproject.toml uv.lock ./
 
-# Étape 4 : Installer Poetry
-RUN pip install --no-cache-dir poetry
+# Copier tout le code (packages + services)
+COPY src ./src
 
-# Étape 5 : Copier fichiers de dépendances
-COPY pyproject.toml poetry.lock README.md ./
+# Aller dans le service
+WORKDIR /app/src/services/pytune_diagnosis
 
-# Étape 6 : Installer les dépendances sans dev
-RUN poetry install --without dev --no-root
+# Installer dans /app/.venv
+RUN uv sync --no-dev
 
-# Étape 7 : Copier le code source
-COPY . .
 
-# Étape 8 : Exposer le port (FastAPI Uvicorn port)
+# ===============================
+# Étape 2 : Image finale
+# ===============================
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ❗ IMPORTANT : ici on doit se placer dans le dossier contenant app/main.py
+WORKDIR /app/src/services/pytune_diagnosis
+
+# Copier tout le workspace + la venv
+COPY --from=builder /app /app
+
 EXPOSE 8008
 
-# Étape 9 : Lancer l'application
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8006"]
+# Lancement via la venv globale créée par UV
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8008"]

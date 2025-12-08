@@ -24,10 +24,11 @@ if config is None:
 pyproject_path = Path(__file__).resolve().parent.parent / "pyproject.toml"
 pyproject_data = toml.load(pyproject_path)
 
-project_metadata = pyproject_data["tool"]["poetry"]
-PROJECT_TITLE = project_metadata.get("name", "pytune_diagnosis")
-PROJECT_VERSION = project_metadata.get("version", "0.1.0")
-PROJECT_DESCRIPTION = project_metadata.get("description", "PyTune RT Diagnosis")
+project_metadata = pyproject_data.get("project", {})
+
+PROJECT_TITLE = project_metadata.get("name", "Unknown Service")
+PROJECT_VERSION = project_metadata.get("version", "0.0.0")
+PROJECT_DESCRIPTION = project_metadata.get("description", "")
 
 # 📄 Logger
 print("ENV LOG_DIR:", os.getenv("LOG_DIR"))
