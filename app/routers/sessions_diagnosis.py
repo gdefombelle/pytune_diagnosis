@@ -63,7 +63,6 @@ async def create_session(
         "reused": False
     }
 
-
 @router.get("/", summary="List diagnosis sessions for current user")
 async def list_user_sessions(
     user_out: UserOut = Depends(get_current_user),
