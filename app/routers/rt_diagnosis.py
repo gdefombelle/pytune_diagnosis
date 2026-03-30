@@ -4,7 +4,6 @@ import json
 import struct
 import time
 import numpy as np
-import librosa
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from pytune_dsp.types.schemas import NoteAnalysisResult
@@ -120,7 +119,6 @@ async def ws_diagnosis(ws: WebSocket):
                             piano_type=piano_type,
                             era=piano_era,
                             use_essentia=True,          # si on veut garder la voie "informed"
-                            use_librosa=False,          # tu peux laisser False
                             use_yin_partitioned=True,   # <── ON active le nouveau moteur
                             yin_partition_mode="cents_250",  # ou "octaves_8", "cents_250"
                             yin_target_width_oct=1.0,

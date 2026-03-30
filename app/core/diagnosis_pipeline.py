@@ -13,7 +13,6 @@ from pytune_dsp.utils.serialize import safe_asdict
 from pytune_dsp.analysis.f0_HP_v2 import compute_f0_HP_v2
 
 # pitch detectors
-from pytune_dsp.analysis.pitch_detection_librosa import guess_note_librosa
 from pytune_dsp.analysis.pitch_detection_expected import guess_note_expected_essentia
 from pytune_dsp.analysis.unison import analyze_unison
 from pytune_dsp.analysis.f0_HP import compute_f0_HP
@@ -62,8 +61,7 @@ def analyze_note(
     era: str = "modern",
 
     # optional detectors
-    use_essentia: bool = False,
-    use_librosa: bool = False,
+    use_essentia: bool = True,
     
     # NEW: Yin partitionné non informé
     use_yin_partitioned: bool = False,
@@ -91,14 +89,10 @@ def analyze_note(
     start_all = time.perf_counter()
 
     # build worker count
-    n_workers = 2 + int(use_librosa) + int(use_essentia)
+    n_workers = 2 + int(use_essentia)
 
     with ThreadPoolExecutor(max_workers=n_workers) as ex:
-        fut_lib = fut_ess = None
-
-        # librosa
-        if use_librosa:
-            fut_lib = ex.submit(timed, guess_note_librosa, signal, sr, True)
+        fut_ess = None
 
         # HPS engines
         fut_hps  = ex.submit(timed, estimate_f0_hps_wrapper, signal, sr, "auto")
@@ -130,10 +124,6 @@ def analyze_note(
 
 
         # resolve futures
-        guess_lib, t_lib = (None, 0.0)
-        if use_librosa:
-            guess_lib, t_lib = fut_lib.result()
-
         (res_hps, t_hps)   = fut_hps.result()
         (res_hpsm, t_hpsm) = fut_hpsm.result()
 
@@ -169,7 +159,6 @@ def analyze_note(
 
     print(cyan(
         "⏱ timings → "
-        + (f"librosa={t_lib:.1f} ms | " if use_librosa else "")
         + (f"essentia={t_ess:.1f} ms | " if use_essentia else "")
         + (f"yin_part={t_yin:.1f} ms | " if use_yin_partitioned else "")
         + f"HPS={t_hps:.1f} ms | multi={t_hpsm:.1f} ms | total={t_total:.1f} ms"
@@ -196,9 +185,6 @@ def analyze_note(
 
     proposals = {}
 
-    # librosa
-    if use_librosa and guess_lib and hasattr(guess_lib, "f0") and guess_lib.f0 > 0:
-        proposals["librosa"] = Guess(guess_lib.f0, getattr(guess_lib,"confidence",0), "librosa")
 
     # essentia expected
     if use_essentia and guess_ess and hasattr(guess_ess, "f0") and guess_ess.f0 > 0:
@@ -333,7 +319,6 @@ def analyze_note(
 
         return out or None
 
-    sub_lib  = extract_subresults(guess_lib)
     sub_ess  = extract_subresults(guess_ess)
     sub_hps  = extract_subresults(res_hps)
     sub_hpsm = None
@@ -348,7 +333,7 @@ def analyze_note(
         }
 
     sub_all = {}
-    for s in (sub_lib, sub_ess, sub_hps, sub_hpsm):
+    for s in (sub_ess, sub_hps, sub_hpsm):
         if s: sub_all.update(s)
 
     guessed_note = {
@@ -362,12 +347,6 @@ def analyze_note(
     }
 
     guesses = {
-        "librosa": {
-            "f0": getattr(guess_lib,"f0",0.0),
-            "confidence": getattr(guess_lib,"confidence",0.0),
-            "method": "librosa",
-            "subresults": sub_lib
-        },
         "essentia": {
             "f0": getattr(guess_ess,"f0",0.0),
             "confidence": getattr(guess_ess,"confidence",0.0),
@@ -507,7 +486,6 @@ def analyze_note(
         unison=safe_asdict(unison),
         response=response_data,
 
-        time_librosa_ms=t_lib,
         time_essentia_ms=t_ess,
         time_pfd_ms=t_hps,
         time_parallel_ms=t_total,
