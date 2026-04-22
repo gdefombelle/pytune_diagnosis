@@ -1,0 +1,14 @@
+PYTHONPATH=src uv run python app/scripts/diag_replay_yin_simple_csv.py --session-id 196 --band-mode octave --score-threshold 0.80 --top-notes 4 --refine-window-cents 100
+========= pyin / bands ======
+PYTHONPATH=src uv run python app/scripts/diag_replay_pyin_band_csv.py --session-id 196 --band-mode octave --score-threshold 0.80 --top-notes 4 --refine-window-cents 100
+
+====== diag_replay_yin_candidate_consolidation_csv =========
+PYTHONPATH=src uv run python app/scripts/diag_replay_yin_candidate_consolidation_csv.py --session-id 196 --band-mode octave --score-threshold 0.80 --top-notes 4 --refine-window-cents 100
+
+======= diag_replay_detect_f0_seed_csv. ========
+PYTHONPATH=src uv run python app/scripts/diag_replay_detect_f0_seed_csv.py --session-id 196 --band-mode octave --score-threshold 0.80 --top-notes 4 --refine-window-cents 100
+
+========= compare =============
+PYTHONPATH=src uv run python app/scripts/diag_compare_f0_seed_csv.py \
+  --reference "tmp/diag_yin_simple_csv/reference.csv" \
+  --current "tmp/diag_detect_f0_seed_csv/diag_session_196_detect_f0_seed_octave_20260422_143550.csv"
