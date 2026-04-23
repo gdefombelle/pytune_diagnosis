@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from typing import Any
 from pytune_dsp.types.schemas import NoteAnalysisResult, GuessNoteResult
+from pytune_dsp.types.dataclasses import AudioChannelInput
 from pytune_dsp.analysis.partials import compute_partials_fft_peaks
 from pytune_dsp.analysis.inharmonicity import compute_inharmonicity_avg, estimate_B
 from pytune_dsp.analysis.spectrum import harmonic_spectrum_fft
@@ -15,8 +16,7 @@ from pytune_dsp.analysis.f0_HP_v2 import compute_f0_HP_v2
 
 # primary seed detectors
 from pytune_dsp.analysis.pitch_detection_expected import detect_f0_informed_expected
-from pytune_dsp.analysis.yin_partitioned import detect_f0_seed_partitioned
-from pytune_dsp.analysis.yin_backend_essentia_frames import yin_backend_essentia_frames
+from pytune_dsp.analysis.detect_f0_seed import detect_f0_seed
 
 # precision / acoustic analysis
 from pytune_dsp.analysis.unison import analyze_unison
@@ -95,6 +95,7 @@ class PrimarySeedDecision:
         partitioned_f0: float | None = None,
         partitioned_score: float = 0.0,
         partitioned_history: list | None = None,
+        partitioned_debug_payload: dict | None = None,
         fallback_used: bool = False,
     ):
         self.selected = selected
@@ -106,6 +107,7 @@ class PrimarySeedDecision:
         self.partitioned_f0 = partitioned_f0
         self.partitioned_score = float(partitioned_score)
         self.partitioned_history = partitioned_history or []
+        self.partitioned_debug_payload = partitioned_debug_payload or {}
         self.fallback_used = bool(fallback_used)
 
 
@@ -128,16 +130,6 @@ class PrecisionRefineDecision:
         self.hp_confidence = hp_confidence
         self.method = method
 
-
-
-def _pick_partitioned_score(yin_history: list) -> float:
-    if not yin_history:
-        return 0.0
-    valid_bands = [br for br in yin_history if getattr(br, "f0", None) is not None]
-    if not valid_bands:
-        return 0.0
-    best_br = max(valid_bands, key=lambda br: br.score)
-    return float(best_br.score)
 
 
 
@@ -174,6 +166,69 @@ def _extract_subresults(engine):
 
     return out or None
 
+
+
+def _run_uninformed_seed_detector(
+    signal: np.ndarray,
+    sr: int,
+):
+    channels = [
+        AudioChannelInput(
+            channel_id="ch_0",
+            signal=np.asarray(signal, dtype=np.float32),
+            sample_rate=int(sr),
+        )
+    ]
+
+    result = detect_f0_seed(
+        channels,
+        trace_level="summary",
+    )
+
+    primary = getattr(result, "primary", None)
+    if primary is None or getattr(primary, "f0", None) is None or float(primary.f0) <= 0:
+        return None
+
+    channel_debug = {}
+    if getattr(result, "channel_results", None):
+        first_channel = result.channel_results[0]
+        channel_debug = getattr(first_channel, "debug_payload", {}) or {}
+
+    confidence = getattr(primary, "confidence", 0.0)
+    try:
+        confidence = float(confidence)
+    except Exception:
+        confidence = 0.0
+
+    return {
+        "f0": float(primary.f0),
+        "confidence": confidence,
+        "note": getattr(primary, "note", None),
+        "method": getattr(primary, "method", "detect_f0_seed"),
+        "channel_debug": channel_debug,
+        "result": result,
+    }
+
+
+def _extract_partitioned_summary_score(partitioned_debug_payload: dict) -> float:
+    if not isinstance(partitioned_debug_payload, dict):
+        return 0.0
+
+    summary = partitioned_debug_payload.get("summary") or {}
+    chosen4 = summary.get("chosen4") or {}
+    chosen3 = summary.get("chosen3") or {}
+    chosen2 = summary.get("chosen2") or {}
+    chosen = summary.get("chosen") or {}
+
+    for candidate in (chosen4, chosen3, chosen2, chosen):
+        score = candidate.get("refined_score")
+        try:
+            if score is not None:
+                return float(score)
+        except Exception:
+            pass
+
+    return 0.0
 
 
 def _detect_primary_seed(
@@ -214,13 +269,9 @@ def _detect_primary_seed(
         if use_uninformed_partitioned:
             fut_partitioned = ex.submit(
                 timed,
-                detect_f0_seed_partitioned,
+                _run_uninformed_seed_detector,
                 signal,
                 sr,
-                yin_partition_mode,
-                yin_backend_essentia_frames,
-                yin_target_width_oct,
-                yin_max_depth,
             )
 
         informed_guess, t_informed = (None, 0.0)
@@ -230,12 +281,19 @@ def _detect_primary_seed(
         partitioned_f0 = None
         partitioned_history = []
         partitioned_score = 0.0
+        partitioned_debug_payload = {}
         t_partitioned = 0.0
         if fut_partitioned is not None:
             partitioned_out, t_partitioned = fut_partitioned.result()
             if partitioned_out is not None:
-                partitioned_f0, partitioned_history = partitioned_out
-                partitioned_score = _pick_partitioned_score(partitioned_history)
+                partitioned_f0 = float(partitioned_out["f0"])
+                partitioned_debug_payload = partitioned_out.get("channel_debug", {}) or {}
+                partitioned_score = float(
+                    partitioned_out.get("confidence")
+                    or _extract_partitioned_summary_score(partitioned_debug_payload)
+                    or 0.0
+                )
+                partitioned_history = []
 
     t_seed_block = (time.perf_counter() - t_block_start) * 1000
 
@@ -268,7 +326,7 @@ def _detect_primary_seed(
         selected = SeedGuess(
             f0=float(partitioned_f0),
             confidence=max(0.35, min(0.99, partitioned_score if partitioned_score > 0 else 0.65)),
-            method="yin_partitioned",
+            method="detect_f0_seed_uninformed",
             source="uninformed",
         )
 
@@ -292,6 +350,7 @@ def _detect_primary_seed(
         partitioned_f0=partitioned_f0,
         partitioned_score=partitioned_score,
         partitioned_history=partitioned_history,
+        partitioned_debug_payload=partitioned_debug_payload,
         fallback_used=fallback_used,
     )
 
@@ -462,6 +521,70 @@ def analyze_note(
     refined_midi = int(round(freq_to_midi(f0_ref)))
     dev_cents = _cents_delta(f0_ref, expected_freq)
 
+    # 2bis) EXPECTED mismatch resolver
+    # If the expected-guided path lands on a different note than the requested one,
+    # run the robust uninformed detector and use it as the found note.
+    uninformed_mismatch_resolver = None
+
+    if use_informed_expected and seed_decision.selected is not None:
+        expected_note_name = freq_to_note(expected_freq)
+
+        if refined_note_name != expected_note_name:
+            print(yellow(
+                f"⚠️ expected mismatch → expected={expected_note_name} | "
+                f"refined={refined_note_name} | trying detect_f0_seed uninformed"
+            ))
+
+            uninformed_mismatch_resolver = _run_uninformed_seed_detector(signal, sr)
+
+            if uninformed_mismatch_resolver is not None:
+                alt_f0 = float(uninformed_mismatch_resolver["f0"])
+                alt_note_name = str(
+                    uninformed_mismatch_resolver.get("note") or freq_to_note(alt_f0)
+                )
+                alt_conf = float(uninformed_mismatch_resolver.get("confidence") or 0.0)
+                alt_method = str(
+                    uninformed_mismatch_resolver.get("method") or "detect_f0_seed_uninformed"
+                )
+
+                # Only switch if the uninformed detector really identifies another note
+                # and returns a plausible pitch.
+                if alt_f0 > 20 and alt_note_name != expected_note_name:
+                    print(green(
+                        f"🔁 mismatch resolved by uninformed seed → "
+                        f"{alt_note_name} @ {alt_f0:.3f} Hz | conf={alt_conf:.3f}"
+                    ))
+
+                    f0_seed = alt_f0
+                    seed_confidence = max(seed_confidence, alt_conf)
+                    seed_method = f"{seed_method}+mismatch_resolved"
+
+                    # Re-run precision refinement from the uninformed seed
+                    refine_decision, refine_timings = _refine_precision_from_seed(
+                        signal=signal,
+                        sr=sr,
+                        f0_seed=f0_seed,
+                    )
+
+                    hps_best = refine_decision.hps_best
+                    if hps_best and hps_best.get("f0", 0) > 0:
+                        print(gray(f"[HPS-multi → best {hps_best['f0']:.2f} Hz]"))
+
+                    print(cyan(
+                        "⏱ refine timings (resolver) → "
+                        f"HPS={refine_timings['hps_ms']:.1f} ms | "
+                        f"multi={refine_timings['hps_multi_ms']:.1f} ms"
+                    ))
+
+                    f0_ref = float(refine_decision.f0_refined)
+                    refined_note_name = freq_to_note(f0_ref)
+                    refined_midi = int(round(freq_to_midi(f0_ref)))
+                    dev_cents = _cents_delta(f0_ref, expected_freq)
+
+                    print(gray(
+                        f"🔧 HP refine (resolver) → seed={f0_seed:.3f} | refined={f0_ref:.3f}"
+                    ))
+
     valid = (
         f0_ref > 20
         and seed_confidence >= 0.25
@@ -504,12 +627,23 @@ def analyze_note(
     # 4) DEBUG / SERIALIZATION
     sub_informed = _extract_subresults(seed_decision.informed_guess)
     sub_partitioned = None
-    if seed_decision.partitioned_f0:
+    if seed_decision.partitioned_f0 or uninformed_mismatch_resolver is not None:
+        debug_payload = seed_decision.partitioned_debug_payload
+        if uninformed_mismatch_resolver is not None:
+            debug_payload = uninformed_mismatch_resolver.get("channel_debug", {}) or debug_payload
+
         sub_partitioned = {
-            "yin_partitioned": {
-                "f0": float(seed_decision.partitioned_f0),
-                "conf": float(seed_decision.partitioned_score),
-                "score": float(seed_decision.partitioned_score),
+            "detect_f0_seed_uninformed": {
+                "f0": float(seed_decision.partitioned_f0) if seed_decision.partitioned_f0 else (
+                    float(uninformed_mismatch_resolver["f0"]) if uninformed_mismatch_resolver else None
+                ),
+                "conf": float(seed_decision.partitioned_score) if seed_decision.partitioned_f0 else (
+                    float(uninformed_mismatch_resolver.get("confidence") or 0.0) if uninformed_mismatch_resolver else 0.0
+                ),
+                "score": float(seed_decision.partitioned_score) if seed_decision.partitioned_f0 else (
+                    float(uninformed_mismatch_resolver.get("confidence") or 0.0) if uninformed_mismatch_resolver else 0.0
+                ),
+                "debug": debug_payload,
             }
         }
 
@@ -551,7 +685,7 @@ def analyze_note(
         "yin_partitioned": {
             "f0": float(seed_decision.partitioned_f0) if seed_decision.partitioned_f0 else None,
             "confidence": float(seed_decision.partitioned_score) if use_uninformed_partitioned else None,
-            "method": "yin_partitioned",
+            "method": "detect_f0_seed_uninformed",
             "subresults": sub_partitioned,
         },
         "informed_expected": {

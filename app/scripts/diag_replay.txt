@@ -12,3 +12,15 @@ PYTHONPATH=src uv run python app/scripts/diag_replay_detect_f0_seed_csv.py --ses
 PYTHONPATH=src uv run python app/scripts/diag_compare_f0_seed_csv.py \
   --reference "tmp/diag_yin_simple_csv/reference.csv" \
   --current "tmp/diag_detect_f0_seed_csv/diag_session_196_detect_f0_seed_octave_20260422_143550.csv"
+
+====== single note test ========
+PYTHONPATH=src uv run python app/scripts/diag_debug_detect_f0_seed_single.py \
+  --session-id 196 \
+  --midi 36 \
+  --trace-level summary
+
+--- mode fulll ---
+PYTHONPATH=src uv run python app/scripts/diag_debug_detect_f0_seed_single.py \
+  --session-id 196 \
+  --midi 36 \
+  --trace-level full
