@@ -63,6 +63,11 @@ CSV_COLUMNS = [
     "candidate_hps_band_note",
     "candidate_hps_agreement",
     "candidate_final_score",
+    "candidate_harmonic_stack_score",
+    "candidate_harmonic_stack_hits",
+    "candidate_harmonic_stack_peaks",
+    "candidate_yin_harmonic_coherence_score",
+    "candidate_yin_harmonic_relations",
     "refine_selected",
     "refined_from_note",
     "refined_from_f0",
@@ -247,6 +252,172 @@ def fft_band_f0(
     conf = float(np.clip((peak_mag / baseline) / 20.0, 0.0, 1.0))
     return f0, conf
 
+def fft_magnitude_spectrum(
+    signal: np.ndarray,
+    sr: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    y = np.asarray(signal, dtype=np.float32)
+    if len(y) < 256:
+        return np.array([], dtype=np.float64), np.array([], dtype=np.float64)
+
+    y = y * np.hanning(len(y))
+    nfft = max(8192, 1 << int(np.ceil(np.log2(len(y)))))
+    spec = np.fft.rfft(y, n=nfft)
+    mag = np.abs(spec).astype(np.float64)
+    freqs = np.fft.rfftfreq(nfft, d=1.0 / sr)
+    return freqs, mag
+
+
+def local_peak_in_window(
+    freqs: np.ndarray,
+    mag: np.ndarray,
+    target_freq: float,
+    window_cents: float = 40.0,
+) -> tuple[Optional[float], float]:
+    if freqs.size == 0 or mag.size == 0 or target_freq <= 0:
+        return None, 0.0
+
+    ratio = 2.0 ** (window_cents / 1200.0)
+    fmin = target_freq / ratio
+    fmax = target_freq * ratio
+
+    lo = int(np.searchsorted(freqs, fmin, side="left"))
+    hi = int(np.searchsorted(freqs, fmax, side="right"))
+    if hi <= lo:
+        return None, 0.0
+
+    seg_mag = mag[lo:hi]
+    seg_freqs = freqs[lo:hi]
+    if seg_mag.size == 0:
+        return None, 0.0
+
+    idx = int(np.argmax(seg_mag))
+    return float(seg_freqs[idx]), float(seg_mag[idx])
+
+
+def compute_candidate_harmonic_stack(
+    signal: np.ndarray,
+    sr: int,
+    candidate_f0: float,
+    num_partials: int = 6,
+    window_cents: float = 40.0,
+) -> dict:
+    """
+    Score simple de cohérence harmonique :
+    - on cherche des pics près de k*f0
+    - on somme leurs amplitudes pondérées
+    - on normalise par l'énergie spectrale globale utile
+    """
+    freqs, mag = fft_magnitude_spectrum(signal, sr)
+    if freqs.size == 0 or mag.size == 0 or candidate_f0 <= 0:
+        return {
+            "candidate_harmonic_stack_score": 0.0,
+            "candidate_harmonic_stack_hits": 0,
+            "candidate_harmonic_stack_peaks": "",
+        }
+
+    useful_mask = (freqs >= 20.0) & (freqs <= min(5000.0, sr * 0.5 - 1.0))
+    useful_energy = float(np.sum(mag[useful_mask]) + 1e-12)
+
+    weights = [1.00, 0.90, 0.75, 0.60, 0.45, 0.35, 0.28, 0.22]
+    weights = weights[:num_partials]
+
+    weighted_sum = 0.0
+    hits = 0
+    peaks: list[str] = []
+
+    nyquist = sr * 0.5
+
+    for k in range(1, num_partials + 1):
+        target = candidate_f0 * k
+        if target >= nyquist - 5.0:
+            break
+
+        peak_freq, peak_amp = local_peak_in_window(
+            freqs=freqs,
+            mag=mag,
+            target_freq=target,
+            window_cents=window_cents,
+        )
+
+        weight = weights[k - 1] if k - 1 < len(weights) else 0.2
+        weighted_sum += weight * peak_amp
+
+        if peak_freq is not None and peak_amp > 0:
+            hits += 1
+            peaks.append(f"{k}:{peak_freq:.1f}")
+
+    score = float(weighted_sum / useful_energy)
+
+    return {
+        "candidate_harmonic_stack_score": score,
+        "candidate_harmonic_stack_hits": hits,
+        "candidate_harmonic_stack_peaks": ", ".join(peaks),
+    }
+
+def is_freq_close_in_cents(f_a: float, f_b: float, tolerance_cents: float = 40.0) -> bool:
+    if f_a <= 0 or f_b <= 0:
+        return False
+    cents = 1200.0 * math.log2(f_a / f_b)
+    return abs(cents) <= tolerance_cents
+
+
+def compute_candidate_yin_harmonic_coherence(
+    candidate_note: str,
+    candidate_f0: float,
+    yin_note_candidates: list[dict],
+    max_harmonic: int = 6,
+    tolerance_cents: float = 40.0,
+) -> dict:
+    """
+    Regarde si les autres candidates YIN peuvent être interprétées
+    comme des harmoniques de la candidate courante.
+    """
+    if candidate_f0 <= 0:
+        return {
+            "candidate_yin_harmonic_coherence_score": 0.0,
+            "candidate_yin_harmonic_relations": "",
+        }
+
+    weights = {
+        2: 1.00,
+        3: 0.90,
+        4: 0.70,
+        5: 0.50,
+        6: 0.40,
+    }
+
+    score = 0.0
+    relations: list[str] = []
+
+    for other in yin_note_candidates:
+        other_note = other.get("candidate_note")
+        other_f0 = other.get("candidate_f0")
+
+        if other_note is None or other_f0 is None:
+            continue
+
+        other_note = str(other_note)
+        other_f0 = float(other_f0)
+
+        if other_note == candidate_note:
+            continue
+
+        matched_harmonic = None
+        for k in range(2, max_harmonic + 1):
+            expected = candidate_f0 * k
+            if is_freq_close_in_cents(other_f0, expected, tolerance_cents=tolerance_cents):
+                matched_harmonic = k
+                break
+
+        if matched_harmonic is not None:
+            score += weights.get(matched_harmonic, 0.25)
+            relations.append(f"{matched_harmonic}:{other_note}")
+
+    return {
+        "candidate_yin_harmonic_coherence_score": float(score),
+        "candidate_yin_harmonic_relations": ", ".join(relations),
+    }
 
 def centered_bounds(center_freq: float, window_cents: float) -> tuple[float, float]:
     ratio = 2.0 ** (window_cents / 1200.0)
@@ -631,12 +802,19 @@ def build_candidate_consolidation(
         for r in refined
         if r.get("candidate_note") is not None
     }
+    yin_note_candidates = list(best_per_note.values())
 
     out: dict[str, dict] = {}
 
     for note, base in best_per_note.items():
         candidate_f0 = float(base["candidate_f0"])
-
+        yin_harmonic_coherence = compute_candidate_yin_harmonic_coherence(
+            candidate_note=note,
+            candidate_f0=candidate_f0,
+            yin_note_candidates=yin_note_candidates,
+            max_harmonic=6,
+            tolerance_cents=40.0,
+        )
         local_fmin, local_fmax = centered_bounds(candidate_f0, refine_window_cents)
 
         fft_local_f0, fft_local_score = fft_band_f0(
@@ -648,6 +826,12 @@ def build_candidate_consolidation(
         fft_local_note = note_name_or_none(fft_local_f0)
 
         hps_local = compute_hps_local_candidate(
+            signal=signal,
+            sr=sr,
+            candidate_f0=candidate_f0,
+            window_cents=refine_window_cents,
+        )
+        harmonic_stack = compute_candidate_harmonic_stack(
             signal=signal,
             sr=sr,
             candidate_f0=candidate_f0,
@@ -679,13 +863,35 @@ def build_candidate_consolidation(
         if hps_band_note == note:
             agreement += 1.0
 
+        harmonic_stack_score = float(harmonic_stack.get("candidate_harmonic_stack_score") or 0.0)
+        harmonic_stack_hits = float(harmonic_stack.get("candidate_harmonic_stack_hits") or 0.0)
+        yin_harmonic_coherence_score = float(
+            yin_harmonic_coherence.get("candidate_yin_harmonic_coherence_score") or 0.0
+        )
+        hps_global_score = float(hps_info.get("hps_score") or 0.0)
+
+        hps_global_bonus = 0.0
+        if hps_band_note == note and hps_global_score >= 0.55:
+            hps_global_bonus = 0.35 + 0.25 * min(hps_global_score, 1.0)
+
+        harmonic_stack_bonus = 0.0
+        if harmonic_stack_hits >= 4:
+            harmonic_stack_bonus = 0.30 * harmonic_stack_score
+
+        yin_harmonic_bonus = 0.0
+        if yin_harmonic_coherence_score > 0:
+            yin_harmonic_bonus = min(0.25, 0.18 * yin_harmonic_coherence_score)
+
         final_score = (
-            1.20 * refined_score
-            + 0.80 * pitchyinfft_score
-            + 0.50 * fft_local_score_val
-            + 0.35 * fft_band_score
-            + 0.70 * hps_local_score
-            + 0.25 * agreement
+            1.25 * refined_score
+            + 0.95 * pitchyinfft_score
+            + 0.30 * fft_local_score_val
+            + 0.20 * fft_band_score
+            + 0.85 * hps_local_score
+            + 0.20 * agreement
+            + hps_global_bonus
+            + harmonic_stack_bonus
+            + yin_harmonic_bonus
         )
 
         out[note] = {
@@ -697,6 +903,11 @@ def build_candidate_consolidation(
             "candidate_hps_local_note": hps_local.get("candidate_hps_local_note"),
             "candidate_hps_local_score": hps_local.get("candidate_hps_local_score"),
             "candidate_hps_band_note": hps_band_note,
+            "candidate_harmonic_stack_score": harmonic_stack.get("candidate_harmonic_stack_score"),
+            "candidate_harmonic_stack_hits": harmonic_stack.get("candidate_harmonic_stack_hits"),
+            "candidate_harmonic_stack_peaks": harmonic_stack.get("candidate_harmonic_stack_peaks"),
+            "candidate_yin_harmonic_coherence_score": yin_harmonic_coherence.get("candidate_yin_harmonic_coherence_score"),
+            "candidate_yin_harmonic_relations": yin_harmonic_coherence.get("candidate_yin_harmonic_relations"),
             "candidate_hps_agreement": agreement,
             "candidate_final_score": final_score,
             "refined_row": refined_row,
@@ -1116,6 +1327,11 @@ def main():
                     "hps_note": hps_info["hps_note"],
                     "hps_score": hps_info["hps_score"],
                     "hps_multi_note": hps_info["hps_multi_note"],
+                    "candidate_harmonic_stack_score": candidate_extra.get("candidate_harmonic_stack_score"),
+                    "candidate_harmonic_stack_hits": candidate_extra.get("candidate_harmonic_stack_hits"),
+                    "candidate_harmonic_stack_peaks": candidate_extra.get("candidate_harmonic_stack_peaks"),
+                    "candidate_yin_harmonic_coherence_score": candidate_extra.get("candidate_yin_harmonic_coherence_score"),
+                    "candidate_yin_harmonic_relations": candidate_extra.get("candidate_yin_harmonic_relations"),
                     "candidate_fft_local_f0": candidate_extra.get("candidate_fft_local_f0"),
                     "candidate_fft_local_note": candidate_extra.get("candidate_fft_local_note"),
                     "candidate_fft_local_score": candidate_extra.get("candidate_fft_local_score"),
@@ -1176,6 +1392,11 @@ def main():
                 "hps_note": hps_info["hps_note"],
                 "hps_score": hps_info["hps_score"],
                 "hps_multi_note": hps_info["hps_multi_note"],
+                "candidate_harmonic_stack_score": None,
+                "candidate_harmonic_stack_hits": None,
+                "candidate_harmonic_stack_peaks": None,
+                "candidate_yin_harmonic_coherence_score": None,
+                "candidate_yin_harmonic_relations": None,
                 "candidate_fft_local_f0": None,
                 "candidate_fft_local_note": None,
                 "candidate_fft_local_score": None,
